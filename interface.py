@@ -5,7 +5,10 @@ class App(CTk):
     def __init__(self):
         super().__init__()
         self.title="CRUD"
-        self.geometry("1000x600")
+        self.geometry("800x600")
+        self.minsize(400, 400)
+        self.maxsize(800, 600)
+
 
         self.login_frame = loginFrame(master=self)
         self.login_frame.pack(side="right", expand=True, fill="both")
@@ -16,29 +19,58 @@ class App(CTk):
 class loginFrame(CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, fg_color="black", **kwargs)
-        self.firstFrame = CTkFrame(self, fg_color="black", corner_radius=None)
-        self.firstText = CTkLabel(self.firstFrame, text="Bem vindo de volta!")
-        self.secondText = CTkLabel(self.firstFrame, text="Entre em sua conta.")
-
-        self.firstFrame.pack(expand=True, fill="both")
-        self.firstText.pack()
-        self.secondText.pack()
-
-
-        self.secondFrame = CTkFrame(self, fg_color="black", corner_radius=None)
-        self.userEntry = CTkEntry(self.secondFrame, fg_color='transparent', border_color="#ff3055")
-        self.passwordEntry = CTkEntry(self.secondFrame, fg_color='transparent', border_color="#ff3055")
-        self.button = CTkButton(self.secondFrame, text="Submit", fg_color="#ff3055", hover_color="#4a1079")
-
-        self.secondFrame.pack(expand=True, fill="both")
-        self.button.pack(side="bottom", ipady=5, padx=20)
-        self.passwordEntry.pack(side="bottom", ipady=5, padx=20, pady=10, fill='x')
-        self.userEntry.pack(side="bottom", ipady=5, padx=20, fill='x')
+        self.topFrame = CTkFrame(self, fg_color="black")
+        self.firsTextFrame = CTkFrame(self.topFrame, fg_color="black")
+        self.secondTextFrame = CTkFrame(self.topFrame, fg_color="black")
+        self.firstText = CTkLabel(self.firsTextFrame, text="Bem vindo de volta!", font=CTkFont(family="Dubai", size=40, weight="bold"), text_color="#ff3055")
+        self.secondText = CTkLabel(self.secondTextFrame, text="Entre em sua conta.", font=CTkFont(family="Dubai", size=20, weight="normal"), text_color="#ff3055")
+        self.topFrame.pack(expand=True, fill="both")
+        self.secondTextFrame.pack(side="bottom", fill="both", padx=18)
+        self.firsTextFrame.pack(side="bottom", fill="both", padx=18)
+        self.firstText.pack(side="left")
+        self.secondText.pack(side="left")
 
 
 
-        self.thirdFrame = CTkFrame(self, fg_color="black", corner_radius=None)
-        self.thirdFrame.pack(expand=True, fill="both")
+
+        self.middleFrame = CTkFrame(self, fg_color="black")
+        self.userEntryFrame = CTkFrame(self.middleFrame, fg_color="black")
+        self.userEntryTextFrame = CTkFrame(self.userEntryFrame, fg_color="black")
+        self.passwordEntryFrame = CTkFrame(self.middleFrame, fg_color="black")
+        self.passwordEntryTextFrame = CTkFrame(self.passwordEntryFrame, fg_color="black")
+        self.buttonFrame = CTkFrame(self.middleFrame, fg_color="black")
+
+
+        self.userEntryText = CTkLabel(self.userEntryTextFrame, text="Usuário", font=CTkFont("Dubai", size=15, weight="bold"), text_color="#ff3055")
+        self.userEntry = CTkEntry(self.userEntryFrame, fg_color='transparent', border_color="#ff3055")
+        self.userImage = CTkImage(Image.open("D:\Programas\Docs\Cursos\Python\CRUD 3.0\Person-icon.png"))
+        self.userLabel = CTkLabel(self.userEntryTextFrame, text=None,image=self.userImage)
+        self.passwordImage = CTkImage(Image.open("D:\Programas\Docs\Cursos\Python\CRUD 3.0\Lock-icon.png"))
+        self.passwordLabel = CTkLabel(self.passwordEntryTextFrame, text=None,image=self.passwordImage)
+        self.passwordEntryText = CTkLabel(self.passwordEntryTextFrame, text="Senha", font=CTkFont("Dubai", size=15, weight="bold"), text_color="#ff3055")
+        self.passwordEntry = CTkEntry(self.passwordEntryFrame, fg_color='transparent', border_color="#ff3055")
+        self.loginButton = CTkButton(self.middleFrame, text="Submit", fg_color="#ff3055", hover_color="#4a1079", font=CTkFont("Dubai", size=15, weight="bold"))
+        self.registerButton = CTkButton(self.middleFrame, text="Register", fg_color="#ff3055", hover_color="#4a1079", font=CTkFont("Dubai", size=15, weight="bold"))
+
+        self.middleFrame.pack(expand=True, fill="both")
+        self.userEntryFrame.pack(fill="x")
+        self.passwordEntryFrame.pack(fill="x")
+        self.userEntryTextFrame.pack(fill="x")
+        self.passwordEntryTextFrame.pack(fill="x")
+        
+        self.registerButton.pack(side="left", padx=18)
+        self.loginButton.pack(side="right", padx=18)
+        self.passwordLabel.pack(side="left", padx=18)
+        self.passwordEntryText.pack(side="left", pady=5)
+        self.userLabel.pack(side="left", padx=18)
+        self.passwordEntry.pack(fill="x", padx=18, ipady=4)
+        self.userEntryText.pack(side="left", pady=5)
+        self.userEntry.pack(fill="x", padx=18, ipady=4)
+
+
+
+        self.bottomFrame = CTkFrame(self, fg_color="black")
+        self.bottomFrame.pack(expand=True, fill="both")
 
 
         #self.grid_rowconfigure(0, weight=10) # Topo
@@ -61,7 +93,7 @@ class loginFrame(CTkFrame):
 class imageFrame(CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
-        self.background = CTkImage(light_image=Image.open("D:\Programas\Docs\Cursos\Python\CRUD 3.0\wallpaper.png"), size=(600, 600))
+        self.background = CTkImage(light_image=Image.open("D:\Programas\Docs\Cursos\Python\CRUD 3.0\wallpaper.png"), size=(400, 600))
         self.imageLabel = CTkLabel(self, text=None,image=self.background)
         loginFrame.put(self.imageLabel)
 
