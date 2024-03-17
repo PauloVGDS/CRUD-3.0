@@ -8,7 +8,7 @@ class App(CTk):
         self.geometry("800x600")
         self.minsize(800, 600)
 
-        self.login_frame = registerFrame(master=self)
+        self.login_frame = loginFrame(master=self)
         self.login_frame.pack(expand=True, fill=BOTH, anchor="center")
 
     @staticmethod
@@ -19,7 +19,7 @@ class App(CTk):
     def image(path, w, h):
         return CTkImage(Image.open(f"D:\Programas\Docs\Cursos\Python\CRUD 3.0\images\{path}"), size=(w, h))
     
-
+    
     def background(self, path):
         self.backgroundImage = App.image(path, 400, 1080)
 
