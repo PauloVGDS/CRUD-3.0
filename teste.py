@@ -1,15 +1,24 @@
 from customtkinter import *
 from PIL import Image
 
+BACKGNDCOLOR = "black"
+CONTRSTEXTCOLOR = "white"
+LOGTEXTCOLOR = "#ff3055"
+REGTEXTCOLOR = "#33dba3"
+LOGHOVERCOLOR = "#4a1079"
+REGHOVERCOLOR = "#3160ac"
+LOGPLACEHOLDCOLOR = "#7A1729"
+REGPLACEHOLDCOLOR = "#18664c"
+
+
 class App(CTk):
-    def __init__(self):
+    def __init__(self, master=None):
         super().__init__()
         self.title("CRUD 3.0")
         self.geometry("800x600")
         self.minsize(800, 600)
-
-        self.login_frame = loginFrame(master=self)
-        self.login_frame.pack(expand=True, fill=BOTH, anchor="center")
+        self.currentFrame = loginFrame(master=self)
+        self.currentFrame.pack(expand=True, fill=BOTH, anchor="center")
 
     @staticmethod
     def font(font="Dubai", size=15, weight="normal"):
@@ -19,7 +28,7 @@ class App(CTk):
     def image(path, w, h):
         return CTkImage(Image.open(f"D:\Programas\Docs\Cursos\Python\CRUD 3.0\images\{path}"), size=(w, h))
     
-    
+
     def background(self, path):
         self.backgroundImage = App.image(path, 400, 1080)
 
@@ -27,109 +36,99 @@ class App(CTk):
         self.imageLabel = CTkLabel(self.image_frame, text=None,image=self.backgroundImage)
         self.image_frame.pack(side=LEFT)
         self.imageLabel.pack()
+    
+    def changeFrames(self):
+        if str(self.__class__) in "<class '__main__.loginFrame'>":
+            self.forget()
+            currentFrame = registerFrame(self.master)
+            currentFrame.pack(expand=True, fill=BOTH, anchor="center")
+        else:
+            self.forget()
+            currentFrame = loginFrame(self.master)
+            currentFrame.pack(expand=True, fill=BOTH, anchor="center")
 
+class widgets(CTkBaseClass):
 
+    def textContainer(master, text, fontSize=20, weight="normal", **kwargs):
+        firsTextFrame = CTkFrame(master, fg_color=BACKGNDCOLOR)
+        firstText = CTkLabel(firsTextFrame, text=text, font=App.font(size=fontSize, weight=weight), text_color=CONTRSTEXTCOLOR)
+        firstText.pack(side=LEFT)
+        return firsTextFrame.pack(**kwargs)
+    
+    def inputContainer(master, text, placeholder, image, show, **kwargs):
+        placeHolderColor = REGPLACEHOLDCOLOR
+        borderColor = REGTEXTCOLOR
+        if (str(master).startswith(".!loginframe") == True):
+            placeHolderColor = LOGPLACEHOLDCOLOR
+            borderColor = LOGTEXTCOLOR
+        
+        entryFrame = CTkFrame(master, fg_color=BACKGNDCOLOR)
+        entryTextFrame = CTkFrame(master, fg_color=BACKGNDCOLOR)
+        entryText = CTkLabel(entryTextFrame, text=text, font=App.font(weight="bold"), text_color=CONTRSTEXTCOLOR)
+        entry = CTkEntry(entryFrame, show=show,
+                                  fg_color='transparent', border_color=borderColor,
+                                  placeholder_text=placeholder, placeholder_text_color=placeHolderColor)
+        image = App.image(image, 25, 30)
+        label = CTkLabel(entryTextFrame, text=None, image=image)
 
+        entryTextFrame.pack(fill=X, pady=5)
+        label.pack(side=LEFT)
+        entryText.pack(side=LEFT, padx=5)
+        entry.pack(fill=X, ipady=5)
+        entryFrame.pack(**kwargs)
+
+    def buttonContainer(master, text, cmd=None, **kwargs):
+        fgColor = LOGTEXTCOLOR
+        hoverColor = LOGHOVERCOLOR
+        textColor = "white"
+        if (str(master).startswith(".!registerframe") == True):
+            fgColor = REGTEXTCOLOR
+            hoverColor = REGHOVERCOLOR
+            textColor = "black"
+            
+        buttonFrame = CTkFrame(master, fg_color=BACKGNDCOLOR)
+        Button = CTkButton(buttonFrame, text=text, font=App.font(weight="bold"), fg_color=fgColor, hover_color=hoverColor, text_color=textColor, command=cmd)
+        Button.pack()
+        return buttonFrame.pack(**kwargs)
+
+    def personInfoContainer():
+        pass
 class loginFrame(CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, fg_color="black", **kwargs)
 
-        # Constantes
-        self.TEXTCOLOR = "#ff3055"
-        self.BACKGROUNDCOLOR = "black"
-
         # Definindo o background
-        App.background(master, path="loginWallpaper.png")
-
+        self.background = App.background(self, path="loginWallpaper.png")
         # Criação e posicionamento dos Widgets
         self.createWidgets()
-        self.placeWidgets()
 
     def createWidgets(self):
-        # Top Frame
-        self.topFrame = CTkFrame(self, fg_color=self.BACKGROUNDCOLOR)
-        self.firsTextFrame = CTkFrame(self.topFrame, fg_color=self.BACKGROUNDCOLOR)
-        self.secondTextFrame = CTkFrame(self.topFrame, fg_color=self.BACKGROUNDCOLOR)
-        self.firstText = CTkLabel(self.firsTextFrame, 
-                                    text="Bem vindo de volta!", font=App.font(size=40, weight="bold"), text_color="white")
-        self.secondText = CTkLabel(self.secondTextFrame, 
-                                    text="Entre em sua conta.", font=App.font(size= 20), text_color="white")
+        # Main Frames
+        self.topFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
+        self.middleFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
+        self.buttonFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
+        self.bottomFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
 
-        # Middle Frame
-        self.middleFrame = CTkFrame(self, fg_color=self.BACKGROUNDCOLOR)
-        self.userEntryFrame = CTkFrame(self.middleFrame, fg_color=self.BACKGROUNDCOLOR)
-        self.userEntryTextFrame = CTkFrame(self.userEntryFrame, fg_color=self.BACKGROUNDCOLOR)
-        self.passwordEntryFrame = CTkFrame(self.middleFrame, fg_color=self.BACKGROUNDCOLOR)
-        self.passwordEntryTextFrame = CTkFrame(self.passwordEntryFrame, fg_color=self.BACKGROUNDCOLOR)
-        self.buttonFrame = CTkFrame(self.middleFrame, fg_color=self.BACKGROUNDCOLOR)
-
-        # Widgets do frame do meio
-        self.userEntryText = CTkLabel(self.userEntryTextFrame, 
-                                      text="Usuário", font=App.font(weight="bold"), text_color="white")
-        self.userEntry = CTkEntry(self.userEntryFrame, 
-                                  fg_color='transparent', border_color=self.TEXTCOLOR,
-                                  placeholder_text="Usuário", placeholder_text_color="#7A1729")
-        self.userImage = App.image("Person-icon.png",25,30)
-        self.userLabel = CTkLabel(self.userEntryTextFrame, 
-                                  text=None, image=self.userImage)
-        self.passwordImage = App.image("Lock-icon.png",25,30)
-        self.passwordLabel = CTkLabel(self.passwordEntryTextFrame, 
-                                      text=None, image=self.passwordImage)
-        self.passwordEntryText = CTkLabel(self.passwordEntryTextFrame, 
-                                          text="Senha", font=App.font(weight="bold"), text_color="white")
-        self.passwordEntry = CTkEntry(self.passwordEntryFrame, 
-                                      fg_color='transparent', border_color=self.TEXTCOLOR,
-                                      placeholder_text="Senha", placeholder_text_color="#7A1729")
-        self.loginButton = CTkButton(self.middleFrame, 
-                                     text="Entrar", font=App.font(weight="bold"), 
-                                     fg_color=self.TEXTCOLOR, hover_color="#4a1079")
-        self.registerButton = CTkButton(self.middleFrame, 
-                                        text="Registrar", font=App.font(weight="bold"), 
-                                        fg_color=self.TEXTCOLOR, hover_color="#4a1079")
-
-        # Bottom Frame
-        self.bottomFrame = CTkFrame(self, fg_color=self.BACKGROUNDCOLOR)
-
-    def placeWidgets(self):
-        # Posicionando os frames do topo
         self.topFrame.pack(expand=True, fill=BOTH)
-        self.secondTextFrame.pack(side=BOTTOM, fill=BOTH, padx=18)
-        self.firsTextFrame.pack(side=BOTTOM, fill=BOTH, padx=18, ipady=0)
-        self.firstText.pack(side=LEFT)
-        self.secondText.pack(side=LEFT)
-
-        # Posicionando os frames do meio
         self.middleFrame.pack(expand=True, fill=BOTH, padx=18)
-        self.userEntryFrame.pack(fill=X)
-        self.passwordEntryFrame.pack(fill=X)
-        self.userEntryTextFrame.pack(fill=X, pady=5)
-        self.passwordEntryTextFrame.pack(fill=X, pady=5)
-        
-        # Posicionando os widgets nos frames
-        self.registerButton.pack(side=LEFT, pady=5)
-        self.loginButton.pack(side=RIGHT, pady=5)
-        self.passwordLabel.pack(side=LEFT)
-        self.passwordEntryText.pack(side=LEFT, padx=5)
-        self.userLabel.pack(side=LEFT)
-        self.passwordEntry.pack(fill=X, ipady=5)
-        self.userEntryText.pack(side=LEFT, padx=5)
-        self.userEntry.pack(fill=X, ipady=5)
-        
-        # Posicionando o frame do fundo
+        self.buttonFrame.pack(fill=X, padx=18)
         self.bottomFrame.pack(expand=True, fill=BOTH)
+
+
+        widgets.textContainer(master=self.topFrame, text="Entre em sua conta.", side=BOTTOM, fill=BOTH, padx=18)
+        widgets.textContainer(master=self.topFrame, text="Bem vindo de volta!", fontSize=40, weight="bold", side=BOTTOM, fill=BOTH, padx=18, ipady=0)
+        self.userinput = widgets.inputContainer(self.middleFrame, "Usuário", "Usuário", "Person-icon.png", show="", fill=X)
+        self.passwordinput = widgets.inputContainer(self.middleFrame, "Senha", "Senha", "Lock-icon.png", show="*", fill=X)
+        widgets.buttonContainer(self.buttonFrame, "Registrar",side=RIGHT, pady=5, cmd=lambda : App.changeFrames(self))
+        widgets.buttonContainer(self.buttonFrame, "Entrar",side=LEFT, pady=5)
+
 
 
 
 class registerFrame(CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, fg_color="black", **kwargs)
-
-        # Constantes
-        self.TEXTCOLOR = "#33dba3"
-        self.HOVERCOLOR = "#3160ac"
-        self.BACKGROUNDCOLOR = "black"
-
-        App.background(master, path="registerWallpaper.png")
+        self.background = App.background(self, path="registerWallpaper.png")
 
         # Criação e posicionamento dos Widgets
         self.createWidgets()
@@ -138,134 +137,78 @@ class registerFrame(CTkFrame):
 
     def createWidgets(self):
         # Top Frame
-        self.topFrame = CTkFrame(self, fg_color=self.BACKGROUNDCOLOR)
-        self.firsTextFrame = CTkFrame(self.topFrame, fg_color=self.BACKGROUNDCOLOR)
-        self.secondTextFrame = CTkFrame(self.topFrame, fg_color=self.BACKGROUNDCOLOR)
-        self.firstText = CTkLabel(self.firsTextFrame, 
-                                  text="Registre-se agora!", font=App.font(size=40, weight="bold"), text_color="white")
-        self.secondText = CTkLabel(self.secondTextFrame, 
-                                   text="Preencha suas informações.", font=App.font(size= 20), text_color="white")
+        self.topFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
+        self.middleFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
+        self.buttonFrame = CTkFrame(self.middleFrame, fg_color=BACKGNDCOLOR)
+        self.buttonFrame.pack(fill=X, side=BOTTOM, pady=5)
+    
+        widgets.textContainer(master=self.topFrame, text="Preencha suas informações.", side=BOTTOM, fill=BOTH, padx=18)
+        widgets.textContainer(master=self.topFrame, text="Registre-se agora!", fontSize=40, weight="bold", side=BOTTOM, fill=BOTH, padx=18)
 
-        # Middle Frame
-        self.middleFrame = CTkFrame(self, fg_color=self.BACKGROUNDCOLOR)
-        # Nome
-        self.nameEntryFrame = CTkFrame(self.middleFrame, fg_color=self.BACKGROUNDCOLOR)
-        self.nameEntryTextFrame = CTkFrame(self.nameEntryFrame, fg_color=self.BACKGROUNDCOLOR)
-        # Email
-        self.emailEntryFrame = CTkFrame(self.middleFrame, fg_color=self.BACKGROUNDCOLOR)
-        self.emailEntryTextFrame = CTkFrame(self.emailEntryFrame, fg_color=self.BACKGROUNDCOLOR)
-        # Senha
-        self.passwordEntryFrame = CTkFrame(self.middleFrame, fg_color=self.BACKGROUNDCOLOR)
-        self.passwordEntryTextFrame = CTkFrame(self.passwordEntryFrame, fg_color=self.BACKGROUNDCOLOR)
-        # Informações da pessoais
-        self.personInfoFrame = CTkFrame(self.middleFrame, fg_color=self.BACKGROUNDCOLOR)
+        self.nameInput = widgets.inputContainer(self.middleFrame, "Nome Completo", "Exemplo: Paulo Vinicius Gomes da Silva","Name-icon.png", show="", fill=X)
+        self.emailInput = widgets.inputContainer(self.middleFrame, "Email", "example@gmail.com","Mail-icon.png", show="", fill=X)
+        self.passwordInput = widgets.inputContainer(self.middleFrame, "Senha", "Senha","GreenLock-icon.png", show="*", fill=X)
+
+        widgets.buttonContainer(self.buttonFrame, "Registrar", side=LEFT)
+        widgets.buttonContainer(self.buttonFrame, "Voltar", side=RIGHT, cmd=lambda : App.changeFrames(self))
+
+        # Informações pessoais
+        self.personInfoFrame = CTkFrame(self.middleFrame, fg_color=BACKGNDCOLOR)
         # Data de nascimento
-        self.bithdateEntryFrame = CTkFrame(self.personInfoFrame, fg_color=self.BACKGROUNDCOLOR)
-        self.bithdateEntryTextFrame = CTkFrame(self.bithdateEntryFrame, fg_color=self.BACKGROUNDCOLOR)
+        self.bithdateEntryFrame = CTkFrame(self.personInfoFrame, fg_color=BACKGNDCOLOR)
+        self.bithdateEntryTextFrame = CTkFrame(self.bithdateEntryFrame, fg_color=BACKGNDCOLOR)
         # Sexo
-        self.genderEntryFrame = CTkFrame(self.personInfoFrame, fg_color=self.BACKGROUNDCOLOR)
-        self.genderEntryTextFrame = CTkFrame(self.genderEntryFrame, fg_color=self.BACKGROUNDCOLOR)
+        self.genderEntryFrame = CTkFrame(self.personInfoFrame, fg_color=BACKGNDCOLOR)
+        self.genderEntryTextFrame = CTkFrame(self.genderEntryFrame, fg_color=BACKGNDCOLOR)
         self.genderEntryContainer = CTkFrame(self.genderEntryFrame, 
-                                             fg_color=self.BACKGROUNDCOLOR, border_color=self.TEXTCOLOR, border_width=2, 
+                                             fg_color=BACKGNDCOLOR, border_color=REGTEXTCOLOR, border_width=2, 
                                              width=140, height=35)
 
-        # Botão
-        self.buttonFrame = CTkFrame(self.middleFrame, fg_color=self.BACKGROUNDCOLOR)
 
-        # Widgets do frame do meio
-        # Nome
-        self.nameEntryText = CTkLabel(self.nameEntryTextFrame, text="Nome Completo", font=App.font(weight="bold"), text_color="white")
-        self.nameEntry = CTkEntry(self.nameEntryFrame, 
-                                  placeholder_text="Exemplo: Paulo Vinicius Gomes Silva", placeholder_text_color="#18664C", 
-                                  fg_color='transparent', border_color=self.TEXTCOLOR, text_color=self.TEXTCOLOR)
-        self.nameImage = CTkLabel(self.nameEntryTextFrame, text=None,image=App.image("Name-icon.png",25,30))
-        # Email
-        self.emailEntryText = CTkLabel(self.emailEntryTextFrame, text="Email", font=App.font(weight="bold"), text_color="white")
-        self.emailEntry = CTkEntry(self.emailEntryFrame,
-                                   placeholder_text="example@gmail.com", placeholder_text_color="#18664C", 
-                                   fg_color='transparent', border_color=self.TEXTCOLOR, text_color=self.TEXTCOLOR)
-        self.emailImage = CTkLabel(self.emailEntryTextFrame, text=None, image=App.image("Mail-icon.png",25,30))
-        # Senha
-        self.passwordEntryText = CTkLabel(self.passwordEntryTextFrame, text="Senha", font=App.font(weight="bold"), text_color="white")
-        self.passwordEntry = CTkEntry(self.passwordEntryFrame, 
-                                      show="*", placeholder_text="Senha", placeholder_text_color="#18664C",
-                                      fg_color='transparent', border_color=self.TEXTCOLOR, text_color=self.TEXTCOLOR)
-        self.passwordImage = CTkLabel(self.passwordEntryTextFrame, text=None,image=App.image("GreenLock-icon.png",25,30))
+
+
 
         # Data de nascimento
-        self.bithdateEntryText = CTkLabel(self.bithdateEntryTextFrame, text="Data de nascimento", font=App.font(weight="bold"), text_color="white")
+        self.bithdateEntryText = CTkLabel(self.bithdateEntryTextFrame, text="Data de nascimento", font=App.font(weight="bold"), text_color=CONTRSTEXTCOLOR)
         self.bithdateEntry = CTkEntry(self.bithdateEntryFrame,
                                       font=App.font(weight="bold", size=12), placeholder_text="DD/MM/YYYY",
-                                      fg_color='transparent', border_color=self.TEXTCOLOR, 
-                                      text_color=self.TEXTCOLOR, placeholder_text_color="#18664C")
+                                      fg_color='transparent', border_color=REGTEXTCOLOR,
+                                      placeholder_text_color="#18664C")
         self.bithdateImage = CTkLabel(self.bithdateEntryTextFrame, text=None,image=App.image("Calendar-icon.png",25,30))
         
         # Gênero
-        self.genderOptionText = CTkLabel(self.genderEntryTextFrame, text="Gênero", font=App.font(weight="bold"), text_color="white")
+        self.genderOptionText = CTkLabel(self.genderEntryTextFrame, text="Gênero", font=App.font(weight="bold"), text_color=CONTRSTEXTCOLOR)
         self.genderOption = CTkOptionMenu(self.genderEntryContainer, 
                                           dropdown_font=App.font(weight="bold", size=13), font=App.font(weight="bold"), 
                                           width=156, height=34, 
-                                          fg_color=self.BACKGROUNDCOLOR, bg_color=self.TEXTCOLOR, text_color="#18664C",
-                                          button_color=self.TEXTCOLOR, button_hover_color=self.HOVERCOLOR, 
-                                          dropdown_fg_color=self.BACKGROUNDCOLOR, dropdown_text_color=self.TEXTCOLOR, dropdown_hover_color=self.HOVERCOLOR, 
+                                          fg_color=BACKGNDCOLOR, bg_color=REGTEXTCOLOR, text_color="#18664C",
+                                          button_color=REGTEXTCOLOR, button_hover_color=REGHOVERCOLOR, 
+                                          dropdown_fg_color=BACKGNDCOLOR, dropdown_text_color=REGTEXTCOLOR, dropdown_hover_color=REGHOVERCOLOR, 
                                           values=["Masculino", "Feminino", "Outro"])
         self.genderImage = CTkLabel(self.genderEntryTextFrame, text=None,image=App.image("Gender-icon.png",25,30))
 
 
-
-
-        # Botões
-        self.loginButton = CTkButton(self.buttonFrame, 
-                                     font=App.font(weight="bold"), text="Voltar", 
-                                     fg_color=self.TEXTCOLOR, hover_color=self.HOVERCOLOR, text_color="black")
-        self.registerButton = CTkButton(self.buttonFrame, 
-                                        font=App.font(weight="bold"), text="Registrar", 
-                                        fg_color=self.TEXTCOLOR, hover_color=self.HOVERCOLOR, text_color="black")
-
         # Bottom Frame
-        self.bottomFrame = CTkFrame(self, fg_color=self.BACKGROUNDCOLOR)
+        self.bottomFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
 
 
     def placeWidgets(self):
-        # Posicionando os frames do topo
-        self.topFrame.pack(expand=True, fill=BOTH, pady=5)
-        self.secondTextFrame.pack(side=BOTTOM, fill=BOTH, padx=18)
-        self.firsTextFrame.pack(side=BOTTOM, fill=BOTH, padx=18)
-        self.firstText.pack(side=LEFT)
-        self.secondText.pack(side=LEFT)
 
-        # Posicionando os frames do meio
+        self.topFrame.pack(expand=True, fill=BOTH, pady=5)
         self.middleFrame.pack(expand=True, fill=BOTH, padx=18)
-        self.nameEntryTextFrame.pack(fill=X, pady=5)
-        self.emailEntryTextFrame.pack(fill=X, pady=5)
-        self.passwordEntryTextFrame.pack(fill=X, pady=5)
+
+
         self.bithdateEntryTextFrame.pack(fill=X, pady=5)
         self.genderEntryTextFrame.pack(fill=X, pady=5)
         self.genderEntryContainer.pack(fill=X, ipady=2, ipadx=10)
 
-        self.nameEntryFrame.pack(fill=X)
-        self.emailEntryFrame.pack(fill=X)
-        self.passwordEntryFrame.pack(fill=X)
+
         self.bithdateEntryFrame.pack(side=LEFT)
         self.genderEntryFrame.pack(side=RIGHT)
         self.personInfoFrame.pack(fill=X, pady=5)
-        self.buttonFrame.pack(fill=X, pady=5)
 
-        # Posicionando os widgets nos frames
-        self.loginButton.pack(side=LEFT, pady=15)
-        self.registerButton.pack(side=RIGHT, pady=15)
 
-        self.nameImage.pack(side=LEFT)
-        self.nameEntryText.pack(side=LEFT, padx=5)
-        self.nameEntry.pack(fill=X, ipady=5)
 
-        self.emailImage.pack(side=LEFT)
-        self.emailEntryText.pack(side=LEFT, padx=5)
-        self.emailEntry.pack(fill=X, ipady=5)
-
-        self.passwordImage.pack(side=LEFT)
-        self.passwordEntryText.pack(side=LEFT, padx=5)
-        self.passwordEntry.pack(fill=X, ipady=5)
         
         self.bithdateImage.pack(side=LEFT)
         self.bithdateEntryText.pack(side=LEFT, padx=5)

@@ -42,11 +42,6 @@ class App(CTk):
 class loginFrame(CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, fg_color="black", **kwargs)
-
-        # Constantes
-
-
-
         # Definindo o background
         App.background(master, path="loginWallpaper.png")
 
