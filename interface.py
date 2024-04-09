@@ -21,12 +21,12 @@ class App(CTk):
         self.login_frame.pack(expand=True, fill=BOTH, anchor="center")
 
     @staticmethod
-    def font(font="Dubai", size=15, weight="normal"):
+    def font(font="Titillium Web Semibold", size=15, weight="normal"):
         return CTkFont(family=font, size=size, weight=weight)
     
     @staticmethod
     def image(path, w, h):
-        return CTkImage(Image.open(f"D:\Programas\Docs\Cursos\Python\CRUD 3.0\images\{path}"), size=(w, h))
+        return CTkImage(Image.open(fr"D:\Programas\Docs\Cursos\Python\CRUD 3.0\images\{path}"), size=(w, h))
     
 
     def background(self, path):
