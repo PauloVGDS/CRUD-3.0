@@ -1,5 +1,6 @@
 from customtkinter import *
 from PIL import Image
+import sqlite3
 
 BACKGNDCOLOR = "black"
 CONTRSTEXTCOLOR = "white"
@@ -21,7 +22,7 @@ class App(CTk):
         self.currentFrame.pack(expand=True, fill=BOTH, anchor="center")
 
     @staticmethod
-    def font(font="Dubai", size=15, weight="normal"):
+    def font(font="Titillium Web", size=15, weight="normal"):
         return CTkFont(family=font, size=size, weight=weight)
     
     @staticmethod
@@ -38,7 +39,8 @@ class App(CTk):
         self.imageLabel.pack()
     
     def changeFrames(self):
-        if str(self.__class__) in "<class '__main__.loginFrame'>":
+        print(self.__class__)
+        if str(self.__class__) == "<class '__main__.loginFrame'>":
             self.forget()
             currentFrame = registerFrame(self.master)
             currentFrame.pack(expand=True, fill=BOTH, anchor="center")
@@ -47,7 +49,79 @@ class App(CTk):
         currentFrame = loginFrame(self.master)
         currentFrame.pack(expand=True, fill=BOTH, anchor="center")
 
-class widgets():
+
+    
+class loginFrame(CTkFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, fg_color="black", **kwargs)
+
+        # Definindo o background
+        self.background = App.background(self, path="loginWallpaper.png")
+        # Criação e posicionamento dos Widgets
+        self.user = StringVar()
+        self.password = StringVar()
+        self.createWidgets()
+
+    def createWidgets(self):
+        # Main Frames
+        self.topFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
+        self.middleFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
+        self.buttonFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
+        self.bottomFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
+
+        self.topFrame.pack(expand=True, fill=BOTH, pady=30)
+        self.middleFrame.pack(expand=True, fill=BOTH, padx=18)
+        self.buttonFrame.pack(fill=X, padx=18)
+        self.bottomFrame.pack(expand=True, fill=BOTH)
+
+
+        widgets.textContainer(master=self.topFrame, text="Entre em sua conta.", side=BOTTOM, fill=BOTH, padx=18)
+        widgets.textContainer(master=self.topFrame, text="Bem vindo de volta!", fontSize=38, weight="bold", side=BOTTOM, fill=BOTH, padx=18, ipady=0)
+        widgets.inputContainer(self.middleFrame, "Usuário", "Usuário", "Person-icon.png", show="", output=self.user, fill=X)
+        widgets.inputContainer(self.middleFrame, "Senha", "Senha", "Lock-icon.png", show="*", output=self.password, fill=X)
+        widgets.buttonContainer(self.buttonFrame, "Registrar",side=RIGHT, pady=5, cmd=lambda : App.changeFrames(self))
+        widgets.buttonContainer(self.buttonFrame, "Entrar",side=LEFT, pady=34)
+
+
+
+class registerFrame(CTkFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, fg_color="black", **kwargs)
+        self.background = App.background(self, path="registerWallpaper.png")
+
+        self.name = StringVar()
+        self.email = StringVar()
+        self.password = StringVar()
+        self.birthdate = StringVar()
+        self.gender = StringVar()
+
+        self.createWidgets()
+
+
+    def createWidgets(self):
+        # Top Frame
+        self.topFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
+        self.middleFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
+        self.buttonFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
+        self.bottomFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
+
+        self.topFrame.pack(expand=True, fill=BOTH, pady=30)
+        self.middleFrame.pack(expand=True, fill=BOTH, padx=18)
+        self.buttonFrame.pack(fill=X, padx=18)
+        self.bottomFrame.pack(expand=True, fill=BOTH)
+    
+        widgets.textContainer(master=self.topFrame, text="Preencha suas informações.", side=BOTTOM, fill=BOTH, padx=18)
+        widgets.textContainer(master=self.topFrame, text="Registre-se agora!", fontSize=38, weight="bold", side=BOTTOM, fill=BOTH, padx=18)
+        self.nameInput = widgets.inputContainer(self.middleFrame, "Nome Completo", "Exemplo: Paulo Vinicius Gomes da Silva","Name-icon.png", show="", output=self.name, fill=X)
+        self.emailInput = widgets.inputContainer(self.middleFrame, "Email", "example@gmail.com","Mail-icon.png", show="", output=self.email, fill=X)
+        self.passwordInput = widgets.inputContainer(self.middleFrame, "Senha", "Senha","GreenLock-icon.png", show="*", output=self.password, fill=X)
+        widgets.personInfoContainer(self.middleFrame, birthAnswer=self.birthdate, genderAnswer=self.gender)
+        widgets.buttonContainer(self.buttonFrame, "Registrar", side=LEFT, pady=34)
+        widgets.buttonContainer(self.buttonFrame, "Voltar", side=RIGHT, cmd=lambda : App.changeFrames(self), pady=10)
+
+  
+
+class widgets:
 
     def textContainer(master, text, fontSize=20, weight="normal", **kwargs):
         firsTextFrame = CTkFrame(master, fg_color=BACKGNDCOLOR)
@@ -91,23 +165,23 @@ class widgets():
         Button.pack(ipady=2)
         return buttonFrame.pack(**kwargs)
 
-    def personInfoContainer(master, genderAnswer, bithAnswer):
+    def personInfoContainer(master, genderAnswer, birthAnswer):
         # Widget exclusivo da janela de registro
         personInfoFrame = CTkFrame(master, fg_color=BACKGNDCOLOR)
-        bithdateEntryFrame = CTkFrame(personInfoFrame, fg_color=BACKGNDCOLOR)
-        bithdateEntryTextFrame = CTkFrame(bithdateEntryFrame, fg_color=BACKGNDCOLOR)
+        birthdateEntryFrame = CTkFrame(personInfoFrame, fg_color=BACKGNDCOLOR)
+        birthdateEntryTextFrame = CTkFrame(birthdateEntryFrame, fg_color=BACKGNDCOLOR)
         genderEntryFrame = CTkFrame(personInfoFrame, fg_color=BACKGNDCOLOR)
         genderEntryTextFrame = CTkFrame(genderEntryFrame, fg_color=BACKGNDCOLOR)
         genderEntryContainer = CTkFrame(genderEntryFrame, 
                                              fg_color=BACKGNDCOLOR, border_color=REGTEXTCOLOR, border_width=2, 
                                              width=140, height=35)
 
-        bithdateEntryText = CTkLabel(bithdateEntryTextFrame, text="Data de nascimento", font=App.font(weight="bold"), text_color=CONTRSTEXTCOLOR)
-        bithdateEntry = CTkEntry(bithdateEntryFrame,
+        birthdateEntryText = CTkLabel(birthdateEntryTextFrame, text="Data de nascimento", font=App.font(weight="bold"), text_color=CONTRSTEXTCOLOR)
+        birthdateEntry = CTkEntry(birthdateEntryFrame,
                                       font=App.font(weight="bold", size=12), placeholder_text="DD/MM/YYYY",
                                       fg_color='transparent', border_color=REGTEXTCOLOR,
-                                      placeholder_text_color="#18664C", textvariable=bithAnswer)
-        bithdateImage = CTkLabel(bithdateEntryTextFrame, text=None,image=App.image("Calendar-icon.png",25,30))
+                                      placeholder_text_color="#18664C", textvariable=birthAnswer)
+        birthdateImage = CTkLabel(birthdateEntryTextFrame, text=None,image=App.image("Calendar-icon.png",25,30))
         genderOptionText = CTkLabel(genderEntryTextFrame, text="Gênero", font=App.font(weight="bold"), text_color=CONTRSTEXTCOLOR)
         genderOption = CTkOptionMenu(genderEntryContainer, 
                                           dropdown_font=App.font(weight="bold", size=13), font=App.font(weight="bold"), 
@@ -118,92 +192,63 @@ class widgets():
                                           values=["Masculino", "Feminino", "Outro"], variable=genderAnswer)
         genderImage = CTkLabel(genderEntryTextFrame, text=None,image=App.image("Gender-icon.png",25,30))
 
-        bithdateEntryTextFrame.pack(fill=X, pady=5)
+        birthdateEntryTextFrame.pack(fill=X, pady=5)
         genderEntryTextFrame.pack(fill=X, pady=5)
         genderEntryContainer.pack(fill=X, ipady=2, ipadx=10)
-        bithdateEntryFrame.pack(side=LEFT)
+        birthdateEntryFrame.pack(side=LEFT)
         genderEntryFrame.pack(side=RIGHT)
         personInfoFrame.pack(fill=X, pady=5)
-        bithdateImage.pack(side=LEFT)
-        bithdateEntryText.pack(side=LEFT, padx=5)
-        bithdateEntry.pack(fill=X, ipady=5)
+        birthdateImage.pack(side=LEFT)
+        birthdateEntryText.pack(side=LEFT, padx=5)
+        birthdateEntry.pack(fill=X, ipady=5)
         genderImage.pack(side=LEFT)
         genderOptionText.pack(side=LEFT)
         genderOption.place(x=2, y=2)
 
 
-    
-class loginFrame(CTkFrame):
-    def __init__(self, master, **kwargs):
-        super().__init__(master, fg_color="black", **kwargs)
 
-        # Definindo o background
-        self.background = App.background(self, path="loginWallpaper.png")
-        # Criação e posicionamento dos Widgets
-        self.user = StringVar()
-        self.password = StringVar()
-        self.createWidgets()
+class sqlControlClass:
+    def __init__(self, db_name):
+        try:
+            self.conn = sqlite3.connect(db_name)
+            self.cursor = self.conn.cursor()
+            if not (self.conn.total_changes):
+                print("Conexão bem sucedida!")
+        except Exception as error:
+            print(f"Erro em: {error}")
 
-    def createWidgets(self):
-        # Main Frames
-        self.topFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
-        self.middleFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
-        self.buttonFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
-        self.bottomFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
+    def create(self):
+        try:
+            self.cursor.execute("CREATE TABLE cadastros (ID INT PRIMARY KEY, Nome VARCHAR(100), Nascionalidade VARCHAR(15), Cidade VARCHAR(50));")
+        except Exception as error:
+            print(f"Erro: {error}")
 
-        self.topFrame.pack(expand=True, fill=BOTH, pady=30)
-        self.middleFrame.pack(expand=True, fill=BOTH, padx=18)
-        self.buttonFrame.pack(fill=X, padx=18)
-        self.bottomFrame.pack(expand=True, fill=BOTH)
+    def read(self):
+        try:
+            self.cursor.execute("SELECT * FROM cadastros")
+        except Exception as error:
+            print(f"Erro: {error}")
+        finally:
+            self.cursor.close()
 
+    def delete(self, Id):
+        try:
+            self.cursor.execute("DELETE FROM cadastros WHERE ID = ?", (Id))
+        except Exception as error:
+            print(f"Erro: {error}")
+        finally:
+            self.cursor.close()
 
-        widgets.textContainer(master=self.topFrame, text="Entre em sua conta.", side=BOTTOM, fill=BOTH, padx=18)
-        widgets.textContainer(master=self.topFrame, text="Bem vindo de volta!", fontSize=38, weight="bold", side=BOTTOM, fill=BOTH, padx=18, ipady=0)
-        widgets.inputContainer(self.middleFrame, "Usuário", "Usuário", "Person-icon.png", show="", output=self.user, fill=X)
-        widgets.inputContainer(self.middleFrame, "Senha", "Senha", "Lock-icon.png", show="*", output=self.password, fill=X)
-        widgets.buttonContainer(self.buttonFrame, "Registrar",side=RIGHT, pady=5, cmd=lambda : App.changeFrames(self))
-        widgets.buttonContainer(self.buttonFrame, "Entrar",side=LEFT, pady=34, cmd=lambda : print(f"Usuário: {self.user.get()}\nSenha: {self.password.get()}"))
+    def insert(self, nome, nascionalidade, cidade):
+        try:
+            self.cursor.execute("INSERT INTO Estudantes (ID, Nome, Nascionalidade, Cidade) VALUES (?, ?, ?);", (nome, nascionalidade, cidade))
+        except Exception as error:
+            print(f"Erro: {error}")
+        finally:
+            self.cursor.close()
 
-
-
-
-class registerFrame(CTkFrame):
-    def __init__(self, master, **kwargs):
-        super().__init__(master, fg_color="black", **kwargs)
-        self.background = App.background(self, path="registerWallpaper.png")
-
-        # Criação e posicionamento dos Widgets
-        self.name = StringVar()
-        self.email = StringVar()
-        self.password = StringVar()
-        self.bithdate = StringVar()
-        self.gender = StringVar()
-        self.createWidgets()
+sqlControlClass("database.db")
 
 
-    def createWidgets(self):
-        # Top Frame
-        self.topFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
-        self.middleFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
-        self.buttonFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
-        self.bottomFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
-
-        self.topFrame.pack(expand=True, fill=BOTH, pady=30)
-        self.middleFrame.pack(expand=True, fill=BOTH, padx=18)
-        self.buttonFrame.pack(fill=X, padx=18)
-        self.bottomFrame.pack(expand=True, fill=BOTH)
-    
-        widgets.textContainer(master=self.topFrame, text="Preencha suas informações.", side=BOTTOM, fill=BOTH, padx=18)
-        widgets.textContainer(master=self.topFrame, text="Registre-se agora!", fontSize=38, weight="bold", side=BOTTOM, fill=BOTH, padx=18)
-        self.nameInput = widgets.inputContainer(self.middleFrame, "Nome Completo", "Exemplo: Paulo Vinicius Gomes da Silva","Name-icon.png", show="", output=self.name, fill=X)
-        self.emailInput = widgets.inputContainer(self.middleFrame, "Email", "example@gmail.com","Mail-icon.png", show="", output=self.email, fill=X)
-        self.passwordInput = widgets.inputContainer(self.middleFrame, "Senha", "Senha","GreenLock-icon.png", show="*", output=self.password, fill=X)
-        widgets.personInfoContainer(self.middleFrame, bithAnswer=self.bithdate, genderAnswer=self.gender)
-        widgets.buttonContainer(self.buttonFrame, "Registrar", side=LEFT, pady=34, cmd=lambda : print(f"Usuário: {self.name.get()}\nSenha: {self.password.get()}\nEmail: {self.email.get()}\nGênero: {self.gender.get()}\nData de Nascimento: {self.bithdate.get()}"))
-        widgets.buttonContainer(self.buttonFrame, "Voltar", side=RIGHT, cmd=lambda : App.changeFrames(self), pady=10)
-
-  
-
-
-app = App()
-app.mainloop()
+# app = App()
+# app.mainloop()
