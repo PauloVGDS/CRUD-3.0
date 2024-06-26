@@ -1,6 +1,8 @@
 from customtkinter import *
 from PIL import Image
-import sqlite3
+import re
+
+
 
 BACKGNDCOLOR = "black"
 CONTRSTEXTCOLOR = "white"
@@ -10,6 +12,8 @@ LOGHOVERCOLOR = "#4a1079"
 REGHOVERCOLOR = "#3160ac"
 LOGPLACEHOLDCOLOR = "#7A1729"
 REGPLACEHOLDCOLOR = "#18664c"
+CHECKICONCOLOR = "#107e10"
+CANCELICONCOLOR = "#c42b1c"
 
 
 class App(CTk):
@@ -18,7 +22,7 @@ class App(CTk):
         self.title("CRUD 3.0")
         self.geometry("800x600")
         self.minsize(800, 600)
-        self.currentFrame = loginFrame(master=self)
+        self.currentFrame = registerFrame(master=self)
         self.currentFrame.pack(expand=True, fill=BOTH, anchor="center")
 
     @staticmethod
@@ -27,19 +31,17 @@ class App(CTk):
     
     @staticmethod
     def image(path, w, h):
-        return CTkImage(Image.open(fr"D:\Programas\Docs\Cursos\Python\CRUD 3.0\images\{path}"), size=(w, h))
+        return CTkImage(Image.open(rf"F:\CRUD-3.0\images\{path}"), size=(w, h))
     
 
     def background(self, path):
         self.backgroundImage = App.image(path, 400, 1080)
-
         self.image_frame = CTkFrame(self, bg_color="black")
         self.imageLabel = CTkLabel(self.image_frame, text=None,image=self.backgroundImage)
         self.image_frame.pack(side=LEFT)
         self.imageLabel.pack()
     
     def changeFrames(self):
-        print(self.__class__)
         if str(self.__class__) == "<class '__main__.loginFrame'>":
             self.forget()
             currentFrame = registerFrame(self.master)
@@ -71,16 +73,18 @@ class loginFrame(CTkFrame):
 
         self.topFrame.pack(expand=True, fill=BOTH, pady=30)
         self.middleFrame.pack(expand=True, fill=BOTH, padx=18)
-        self.buttonFrame.pack(fill=X, padx=18)
+        self.buttonFrame.pack(fill=X, padx=18, ipady=6)
         self.bottomFrame.pack(expand=True, fill=BOTH)
 
 
         widgets.textContainer(master=self.topFrame, text="Entre em sua conta.", side=BOTTOM, fill=BOTH, padx=18)
-        widgets.textContainer(master=self.topFrame, text="Bem vindo de volta!", fontSize=38, weight="bold", side=BOTTOM, fill=BOTH, padx=18, ipady=0)
-        widgets.inputContainer(self.middleFrame, "Usuário", "Usuário", "Person-icon.png", show="", output=self.user, fill=X)
-        widgets.inputContainer(self.middleFrame, "Senha", "Senha", "Lock-icon.png", show="*", output=self.password, fill=X)
-        widgets.buttonContainer(self.buttonFrame, "Registrar",side=RIGHT, pady=5, cmd=lambda : App.changeFrames(self))
-        widgets.buttonContainer(self.buttonFrame, "Entrar",side=LEFT, pady=34)
+        widgets.textContainer(master=self.topFrame, text="Bem vindo de volta!", fontSize=38, weight="bold", side=BOTTOM, fill=BOTH, padx=18)
+        self.userInput = widgets.inputContainer(self.middleFrame, "Usuário", "Usuário", "Person-icon.png", show="", output=self.user, fill=X)
+        self.passwordInput = widgets.inputContainer(self.middleFrame, "Senha", "Senha", "Lock-icon.png", show="*", output=self.password, fill=X)
+        self.warning = widgets.textContainer(master=self.buttonFrame, text="", textColor=CONTRSTEXTCOLOR, side=BOTTOM)
+
+        widgets.buttonContainer(self.buttonFrame, "Registrar", side=RIGHT, cmd=lambda : App.changeFrames(self), pady = 34)
+        widgets.buttonContainer(self.buttonFrame, "Entrar", side=LEFT, cmd= lambda : widgets.login(self, "Usuário/Senha Incorretos!", self.warning, self.userInput, self.passwordInput), pady = 34)
 
 
 
@@ -112,22 +116,24 @@ class registerFrame(CTkFrame):
     
         widgets.textContainer(master=self.topFrame, text="Preencha suas informações.", side=BOTTOM, fill=BOTH, padx=18)
         widgets.textContainer(master=self.topFrame, text="Registre-se agora!", fontSize=38, weight="bold", side=BOTTOM, fill=BOTH, padx=18)
-        self.nameInput = widgets.inputContainer(self.middleFrame, "Nome Completo", "Exemplo: Paulo Vinicius Gomes da Silva","Name-icon.png", show="", output=self.name, fill=X)
-        self.emailInput = widgets.inputContainer(self.middleFrame, "Email", "example@gmail.com","Mail-icon.png", show="", output=self.email, fill=X)
-        self.passwordInput = widgets.inputContainer(self.middleFrame, "Senha", "Senha","GreenLock-icon.png", show="*", output=self.password, fill=X)
-        widgets.personInfoContainer(self.middleFrame, birthAnswer=self.birthdate, genderAnswer=self.gender)
-        widgets.buttonContainer(self.buttonFrame, "Registrar", side=LEFT, pady=34)
-        widgets.buttonContainer(self.buttonFrame, "Voltar", side=RIGHT, cmd=lambda : App.changeFrames(self), pady=10)
+        self.nameInput = widgets.inputContainer(self.middleFrame, "Nome Completo*", "Exemplo: Paulo Vinicius Gomes da Silva","Name-icon.png", show="", output=self.name, fill=X)
+        self.emailInput = widgets.inputContainer(self.middleFrame, "Email*", "example@gmail.com","Mail-icon.png", show="", output=self.email, fill=X)
+        self.passwordInput = widgets.inputContainer(self.middleFrame, "Senha*", "Senha","GreenLock-icon.png", show="*", output=self.password, fill=X)
+        self.warning = widgets.textContainer(master=self.buttonFrame, text="", textColor=CONTRSTEXTCOLOR, side=BOTTOM)
 
+        widgets.personInfoContainer(self.middleFrame, birthAnswer=self.birthdate, genderAnswer=self.gender)
+        widgets.buttonContainer(self.buttonFrame, "Registrar", side=LEFT, pady=28, cmd=lambda : widgets.registro(self, "Preencha os campos obrigatórios!", self.warning, self.nameInput, self.emailInput, self.passwordInput))
+        widgets.buttonContainer(self.buttonFrame, "Voltar", side=RIGHT, cmd=lambda : App.changeFrames(self), pady=28)
   
 
 class widgets:
 
-    def textContainer(master, text, fontSize=20, weight="normal", **kwargs):
+    def textContainer(master, text, fontSize=20, weight="normal", textColor = CONTRSTEXTCOLOR, **kwargs):
         firsTextFrame = CTkFrame(master, fg_color=BACKGNDCOLOR)
-        firstText = CTkLabel(firsTextFrame, text=text, font=App.font(size=fontSize, weight=weight), text_color=CONTRSTEXTCOLOR)
+        firstText = CTkLabel(firsTextFrame, text=text, font=App.font(size=fontSize, weight=weight), text_color=textColor, corner_radius=5)
         firstText.pack(side=LEFT)
-        return firsTextFrame.pack(**kwargs)
+        firsTextFrame.pack(**kwargs)
+        return firstText
     
     def inputContainer(master, text, placeholder, image, show, output=None, **kwargs):
         placeHolderColor = REGPLACEHOLDCOLOR
@@ -142,14 +148,16 @@ class widgets:
         entry = CTkEntry(entryFrame, show=show, textvariable=output,
                                   fg_color='transparent', border_color=borderColor,
                                   placeholder_text=placeholder, placeholder_text_color=placeHolderColor)
-        image = App.image(image, 25, 30)
-        label = CTkLabel(entryTextFrame, text=None, image=image)
+        textLabel = CTkLabel(entryTextFrame, text=None, image=App.image(image, 25, 30))
+        imageLabel = CTkLabel(entryTextFrame, text=None)
 
         entryTextFrame.pack(fill=X, pady=5)
-        label.pack(side=LEFT)
+        textLabel.pack(side=LEFT)
         entryText.pack(side=LEFT, padx=5)
         entry.pack(fill=X, ipady=5)
+        imageLabel.pack(side=RIGHT)
         entryFrame.pack(**kwargs)
+        return imageLabel
 
     def buttonContainer(master, text, cmd=None, **kwargs):
         fgColor = LOGTEXTCOLOR
@@ -205,50 +213,75 @@ class widgets:
         genderOptionText.pack(side=LEFT)
         genderOption.place(x=2, y=2)
 
+    def login(master, texto, var, *args):
+        if (master.user.get() == "") or (master.password.get() == ""):  
+            for el in args:
+                el.configure(image=App.image("Cancel_icon.png", 25, 25))    
+
+            var.configure(fg_color=CANCELICONCOLOR)
+            var.configure(text_color = CONTRSTEXTCOLOR)
+            var.configure(text = texto)
+            return master.update()
+        
+        for el in args:
+            el.configure(image=App.image("Check_icon.png", 25, 25))
+
+        var.configure(fg_color=CHECKICONCOLOR)
+        var.configure(text_color = CONTRSTEXTCOLOR)
+        var.configure(text = "Conectado!")
+        master.update()
+        
+    def registro(master, texto, var, *args):
+            if (master.name.get() == "") or (master.email.get() == "") or (master.password.get() == ""):
+                
+                if re.search(r"^[A-Za-z]{,5}$", master.name.get()):
+                    args[0].configure(image=App.image("Cancel_icon.png", 25, 25))    
+                else:
+                    args[0].configure(image=App.image("Check_icon.png", 25, 25))  
+
+                if re.search(r"^[a-zA-Z0-9.-_]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", master.email.get()):
+                    args[1].configure(image=App.image("Check_icon.png", 25, 25))
+                else:
+                    args[1].configure(image=App.image("Cancel_icon.png", 25, 25))    
+                
+                if re.search(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*?~])[A-Za-z0-9!@#$%^&*?~]{8,}$", master.password.get()): # {mínimo, máximo}
+                    args[2].configure(image=App.image("Check_icon.png", 25, 25))  
+                else:
+                    args[2].configure(image=App.image("Cancel_icon.png", 25, 25))  
+                var.configure(fg_color=CANCELICONCOLOR)
+                var.configure(text_color = CONTRSTEXTCOLOR)
+                var.configure(text = texto)
+                return master.update()
+            
+            # Data de nascimento formatada corretamente
+            if re.search(r"^[0-9]{2}/[0-9]{2}/[0-9]{4}$", master.birthdate.get()):
+                pass
+
+            for el in args:
+                el.configure(image=App.image("Check_icon.png", 25, 25))
+            var.configure(fg_color=CHECKICONCOLOR)
+            var.configure(text_color = CONTRSTEXTCOLOR)
+            var.configure(text = "Registrado!")
+            print(f"Nome: {master.name.get()}\nEmail: {master.email.get()}\nSenha: {master.password.get()}\nData de Nascimento: {master.birthdate.get()}\nGênero: {master.gender.get()}")
+            return master.update()
 
 
-class sqlControlClass:
+class dataControl:
     def __init__(self, db_name):
-        try:
-            self.conn = sqlite3.connect(db_name)
-            self.cursor = self.conn.cursor()
-            if not (self.conn.total_changes):
-                print("Conexão bem sucedida!")
-        except Exception as error:
-            print(f"Erro em: {error}")
-
+        pass
+    
     def create(self):
-        try:
-            self.cursor.execute("CREATE TABLE cadastros (ID INT PRIMARY KEY, Nome VARCHAR(100), Nascionalidade VARCHAR(15), Cidade VARCHAR(50));")
-        except Exception as error:
-            print(f"Erro: {error}")
+        pass
 
     def read(self):
-        try:
-            self.cursor.execute("SELECT * FROM cadastros")
-        except Exception as error:
-            print(f"Erro: {error}")
-        finally:
-            self.cursor.close()
+        pass
 
-    def delete(self, Id):
-        try:
-            self.cursor.execute("DELETE FROM cadastros WHERE ID = ?", (Id))
-        except Exception as error:
-            print(f"Erro: {error}")
-        finally:
-            self.cursor.close()
+    def update(self):
+        pass
 
-    def insert(self, nome, nascionalidade, cidade):
-        try:
-            self.cursor.execute("INSERT INTO Estudantes (ID, Nome, Nascionalidade, Cidade) VALUES (?, ?, ?);", (nome, nascionalidade, cidade))
-        except Exception as error:
-            print(f"Erro: {error}")
-        finally:
-            self.cursor.close()
-
-sqlControlClass("database.db")
+    def delete(self):
+        pass
 
 
-# app = App()
-# app.mainloop()
+app = App()
+app.mainloop()
