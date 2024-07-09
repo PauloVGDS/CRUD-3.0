@@ -6,14 +6,19 @@ import re, os
 
 BACKGNDCOLOR = "black"
 CONTRSTEXTCOLOR = "white"
+WARNINGCOLOR = "#f4da01"
+WARNINGHOVERCOLOR = "#a79500"
 LOGTEXTCOLOR = "#ff3055"
 REGTEXTCOLOR = "#33dba3"
+ADMTEXTCOLOR = "#0f9b0f"
 LOGHOVERCOLOR = "#4a1079"
 REGHOVERCOLOR = "#3160ac"
+ADMHOVERCOLOR = "#032203"
 LOGPLACEHOLDCOLOR = "#7A1729"
 REGPLACEHOLDCOLOR = "#18664c"
 CHECKICONCOLOR = "#107e10"
 CANCELICONCOLOR = "#c42b1c"
+CANCELHOVERCOLOR = "#501111"
 CURRENTPATH = os.path.dirname(os.path.realpath(__file__))
 
 class App(CTk):
@@ -21,8 +26,10 @@ class App(CTk):
         super().__init__()
         self.title("CRUD 3.0")
         self.geometry("800x600")
+        self.maxsize(800, 600)
         self.minsize(800, 600)
-        self.currentFrame = loginFrame(master=self)
+        
+        self.currentFrame = adminFrame(master=self)
         self.currentFrame.pack(expand=True, fill=BOTH, anchor="center")
 
     @staticmethod
@@ -33,23 +40,30 @@ class App(CTk):
     def image(path, w, h):
         return CTkImage(Image.open(rf"{CURRENTPATH}\images\{path}"), size=(w, h))
     
-
     def background(self, path):
         self.backgroundImage = App.image(path, 400, 1080)
         self.image_frame = CTkFrame(self, bg_color="black")
         self.imageLabel = CTkLabel(self.image_frame, text=None,image=self.backgroundImage)
         self.image_frame.pack(side=LEFT)
         self.imageLabel.pack()
-    
-    def changeFrames(self):
+
+    def changeFrames(self, adm=False):
+        if adm:
+            self.forget()
+            currentFrame = adminFrame(self.master)
+            return currentFrame.pack(expand=True, fill=BOTH, anchor="center")
+        if str(self.__class__) == "<class '__main__.adminFrame'>":
+            self.forget()
+            currentFrame = loginFrame(self.master)
+            return currentFrame.pack(expand=True, fill=BOTH, anchor="center")
         if str(self.__class__) == "<class '__main__.loginFrame'>":
             self.forget()
             currentFrame = registerFrame(self.master)
-            currentFrame.pack(expand=True, fill=BOTH, anchor="center")
+            return currentFrame.pack(expand=True, fill=BOTH, anchor="center")
 
         self.forget()
         currentFrame = loginFrame(self.master)
-        currentFrame.pack(expand=True, fill=BOTH, anchor="center")
+        return currentFrame.pack(expand=True, fill=BOTH, anchor="center")
 
 
     
@@ -79,12 +93,12 @@ class loginFrame(CTkFrame):
 
         widgets.textContainer(master=self.topFrame, text="Entre em sua conta.", side=BOTTOM, fill=BOTH, padx=18)
         widgets.textContainer(master=self.topFrame, text="Bem vindo de volta!", fontSize=38, weight="bold", side=BOTTOM, fill=BOTH, padx=18)
-        self.userInput = widgets.inputContainer(self.middleFrame, "Usuário", "Usuário", "Person-icon.png", show="", output=self.user, fill=X)
-        self.passwordInput = widgets.inputContainer(self.middleFrame, "Senha", "Senha", "Lock-icon.png", show="*", output=self.password, fill=X)
+        self.userInput = widgets.inputContainer(self.middleFrame, "Usuário", "Person-icon.png", output=self.user, fill=X)
+        self.passwordInput = widgets.submitContainer(self.middleFrame, "Senha", "Lock-icon.png", show="*", output=self.password, fill=X)
         self.warning = widgets.textContainer(master=self.buttonFrame, text="", textColor=CONTRSTEXTCOLOR, side=BOTTOM)
 
-        widgets.buttonContainer(self.buttonFrame, "Registrar", side=RIGHT, cmd=lambda : App.changeFrames(self), pady = 34)
-        widgets.buttonContainer(self.buttonFrame, "Entrar", side=LEFT, cmd= lambda : widgets.login(self, "Usuário/Senha Incorretos!", self.warning, self.userInput, self.passwordInput), pady = 34)
+        widgets.buttonContainer(self.buttonFrame, "Registrar", side=LEFT, cmd=lambda : App.changeFrames(self), pady = 34)
+        widgets.buttonContainer(self.buttonFrame, "Entrar", side=RIGHT, cmd= lambda : widgets.login(self, "Usuário/Senha Incorretos!", self.warning, self.userInput, self.passwordInput), pady = 34)
 
 
 
@@ -116,47 +130,99 @@ class registerFrame(CTkFrame):
     
         widgets.textContainer(master=self.topFrame, text="Preencha suas informações.", side=BOTTOM, fill=BOTH, padx=18)
         widgets.textContainer(master=self.topFrame, text="Registre-se agora!", fontSize=38, weight="bold", side=BOTTOM, fill=BOTH, padx=18)
-        self.nameInput = widgets.inputContainer(self.middleFrame, "Nome Completo*", "Exemplo: Paulo Vinicius Gomes da Silva","Name-icon.png", show="", output=self.name, fill=X)
-        self.emailInput = widgets.inputContainer(self.middleFrame, "Email*", "example@gmail.com","Mail-icon.png", show="", output=self.email, fill=X)
-        self.passwordInput = widgets.inputContainer(self.middleFrame, "Senha*", "Senha","GreenLock-icon.png", show="*", output=self.password, fill=X)
+        self.nameInput = widgets.inputContainer(self.middleFrame, "Nome Completo*", "Name-icon.png", output=self.name, fill=X)
+        self.emailInput = widgets.inputContainer(self.middleFrame, "Email*", "Mail-icon.png", output=self.email, fill=X)
+        self.passwordInput = widgets.submitContainer(self.middleFrame, "Senha*", "GreenLock-icon.png", show="*", output=self.password, fill=X)
         self.warning = widgets.textContainer(master=self.buttonFrame, text="", textColor=CONTRSTEXTCOLOR, side=BOTTOM)
 
         widgets.personInfoContainer(self.middleFrame, birthAnswer=self.birthdate, genderAnswer=self.gender)
-        widgets.buttonContainer(self.buttonFrame, "Registrar", side=LEFT, pady=28, cmd=lambda : widgets.registro(self, "Preencha os campos obrigatórios!", self.warning, self.nameInput, self.emailInput, self.passwordInput))
-        widgets.buttonContainer(self.buttonFrame, "Voltar", side=RIGHT, cmd=lambda : App.changeFrames(self), pady=28)
+        widgets.buttonContainer(self.buttonFrame, "Registrar", side=RIGHT, pady=28, cmd=lambda : widgets.registro(self, "Preencha os campos obrigatórios!", self.warning, self.nameInput, self.emailInput, self.passwordInput))
+        widgets.buttonContainer(self.buttonFrame, "Voltar", side=LEFT, cmd=lambda : App.changeFrames(self), pady=28)
   
 
 
 class adminFrame(CTkFrame):
     def __init__(self, master):
         super().__init__(master, fg_color="black")
+        self.search = StringVar()
+        self.updateOption = StringVar()
+        self.updateOutput = StringVar()
+        self.background = App.background(self, path="adminWallpaper.png")
+        self.createWidgets()
 
+    def createWidgets(self):
+        # Main Frames
+        self.topFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
+        self.middleFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
+        self.bottomFrame = CTkFrame(self, fg_color=BACKGNDCOLOR)
+
+        widgets.textContainer(master=self.topFrame, text="Somente pessoas autorizadas!", side=BOTTOM, fill=BOTH, padx=18)
+        widgets.textContainer(master=self.topFrame, text="Administação", fontSize=38, side=BOTTOM, fill=BOTH, padx=18)
+        self.entry = widgets.submitContainer(master=self.middleFrame, text="Pesquisar", image="Search_icon.png", output=self.search, self=self, fill=X)
+        self.warning = widgets.textContainer(master=self.bottomFrame, text="", textColor=CONTRSTEXTCOLOR, side=BOTTOM, pady=18)
+
+        self.tabview = CTkTabview(self.middleFrame, height=314,
+                                  segmented_button_fg_color=BACKGNDCOLOR, segmented_button_selected_color=BACKGNDCOLOR, segmented_button_selected_hover_color=BACKGNDCOLOR, segmented_button_unselected_hover_color=BACKGNDCOLOR, segmented_button_unselected_color=BACKGNDCOLOR, 
+                                  text_color=BACKGNDCOLOR, state=DISABLED, text_color_disabled=BACKGNDCOLOR, border_color=ADMTEXTCOLOR, border_width=2, fg_color=BACKGNDCOLOR)
+        self.tabview.pack(fill=X)
+        self.tabview.add("0")
+        widgets.textContainer(master=self.tabview.tab("0"), text="Read", fontSize=22, textColor=ADMTEXTCOLOR)
+        widgets.textContainer(master=self.tabview.tab("0"), text="Pesquise um email para ler suas informações!", fontSize=18, textColor=CONTRSTEXTCOLOR)
+        self.nome = widgets.textContainer(master=self.tabview.tab("0"), text="Nome:", fontSize=16, textColor=CONTRSTEXTCOLOR, fill=X, padx=8)
+        self.email = widgets.textContainer(master=self.tabview.tab("0"), text="Email:", fontSize=16, textColor=CONTRSTEXTCOLOR, fill=X, padx=8)
+        self.password = widgets.textContainer(master=self.tabview.tab("0"), text="Senha:", fontSize=16, textColor=CONTRSTEXTCOLOR, fill=X, padx=8)
+        self.birth = widgets.textContainer(master=self.tabview.tab("0"), text="Data de Nascimento:", fontSize=16, textColor=CONTRSTEXTCOLOR, fill=X, padx=8)
+        self.gender = widgets.textContainer(master=self.tabview.tab("0"), text="Gênero:", fontSize=16, textColor=CONTRSTEXTCOLOR, fill=X, padx=8)
+        
+        self.tabview.add("1")    
+        widgets.textContainer(master=self.tabview.tab("1"), text="Update", fontSize=22, textColor=ADMTEXTCOLOR)
+        widgets.updateContainer(self.tabview .tab("1"), text="Opções:", image="personEdit_icon.png", option=self.updateOption, output=self.updateOutput)
+        widgets.textContainer(master=self.tabview.tab("1"), text="Selecione a opção que deseja alterar!", fontSize=18, textColor=CONTRSTEXTCOLOR)
+
+        self.tabview.add("2")
+        widgets.textContainer(master=self.tabview.tab("2"), text="Delete", fontSize=22, textColor=ADMTEXTCOLOR)
+        widgets.textContainer(master=self.tabview.tab("2"), text="Usuários deletados não podem ser restaurados!", fontSize=16, textColor=CONTRSTEXTCOLOR)
+        widgets.textContainer(master=self.tabview.tab("2"), text="Você tem certeza que deseja deletar o usuário:", fontSize=16, textColor=CONTRSTEXTCOLOR)
+        self.nome = widgets.textContainer(master=self.tabview.tab("0"), text="", fontSize=16, textColor=CONTRSTEXTCOLOR, fill=X, padx=8)
+        
+        
+        for c in range(0,3):
+            buttonFrame = CTkFrame(self.tabview.tab(f"{c}"), fg_color=BACKGNDCOLOR)
+            buttonFrame.pack(fill=X, padx=35, pady=14, side=BOTTOM)
+            widgets.buttonContainer(master=buttonFrame, text="", cmd=lambda : self.tabview.set(f"{0 if (self.tabview.index(f"{self.tabview.get()}")+1) > 2 else (self.tabview.index(f"{self.tabview.get()}")+1)}"), side=RIGHT).configure(width=50, fg_color='transparent', border_color=ADMTEXTCOLOR, border_width=2, image=App.image("arrowRight_icon.png", 20, 20))
+            widgets.buttonContainer(master=buttonFrame, text="", cmd=lambda : self.tabview.set(f"{2 if (self.tabview.index(f"{self.tabview.get()}")-1) < 0 else (self.tabview.index(f"{self.tabview.get()}")-1)}"), side=LEFT).configure(width=50, fg_color='transparent', border_color=ADMTEXTCOLOR, border_width=2, image=App.image("arrowLeft_icon.png", 20, 20))
+            if c == 0:
+                widgets.buttonContainer(master=buttonFrame, text="", cmd=lambda : App.changeFrames(self)).configure(width=50, fg_color='transparent', border_color=WARNINGCOLOR, hover_color=WARNINGHOVERCOLOR,border_width=2, image=App.image("Exit_icon.png", 20, 20))
+            elif c == 1:
+                widgets.buttonContainer(master=buttonFrame, text="").configure(width=50, fg_color='transparent', border_color=ADMTEXTCOLOR, border_width=2, image=App.image("personEdit_icon.png", 20, 20))
+            elif c == 2:
+                widgets.buttonContainer(master=buttonFrame, text="").configure(width=50, fg_color='transparent', border_color=CANCELICONCOLOR, border_width=2, image=App.image("personRemove_icon.png", 20, 20), hover_color=CANCELHOVERCOLOR)
+            
+
+        self.topFrame.pack(expand=True, fill=BOTH, pady=30)
+        self.middleFrame.pack(expand=True, fill=BOTH, padx=18)
+        self.bottomFrame.pack(expand=True, fill=BOTH)
 
 
 class widgets:
 
-    def textContainer(master, text, fontSize=20, weight="normal", textColor = CONTRSTEXTCOLOR, **kwargs):
+    def textContainer(master, text, fontSize=20, weight="normal", textColor = CONTRSTEXTCOLOR, image=None,  **kwargs):
         firsTextFrame = CTkFrame(master, fg_color=BACKGNDCOLOR)
-        firstText = CTkLabel(firsTextFrame, text=text, font=App.font(size=fontSize, weight=weight), text_color=textColor, corner_radius=5)
+        firstText = CTkLabel(firsTextFrame, text=text, font=App.font(size=fontSize, weight=weight), image=image, text_color=textColor, corner_radius=5)
         firstText.pack(side=LEFT)
         firsTextFrame.pack(**kwargs)
         return firstText
     
-    def inputContainer(master, text, placeholder, image, show, output=None, **kwargs):
-        placeHolderColor = REGPLACEHOLDCOLOR
+    def inputContainer(master, text, image, show="", output=None, **kwargs):
         borderColor = REGTEXTCOLOR
         if (str(master).startswith(".!loginframe") == True):
-            placeHolderColor = LOGPLACEHOLDCOLOR
             borderColor = LOGTEXTCOLOR
-        
         entryFrame = CTkFrame(master, fg_color=BACKGNDCOLOR)
         entryTextFrame = CTkFrame(master, fg_color=BACKGNDCOLOR)
         entryText = CTkLabel(entryTextFrame, text=text, font=App.font(weight="bold"), text_color=CONTRSTEXTCOLOR)
-        entry = CTkEntry(entryFrame, show=show, textvariable=output,
-                                  fg_color='transparent', border_color=borderColor,
-                                  placeholder_text=placeholder, placeholder_text_color=placeHolderColor)
-        textLabel = CTkLabel(entryTextFrame, text=None, image=App.image(image, 25, 30))
         imageLabel = CTkLabel(entryTextFrame, text=None)
+        entry = CTkEntry(entryFrame, show=show, textvariable=output, fg_color='transparent', border_color=borderColor)
+        textLabel = CTkLabel(entryTextFrame, text=None, image=App.image(image, 25, 30))
 
         entryTextFrame.pack(fill=X, pady=5)
         textLabel.pack(side=LEFT)
@@ -164,6 +230,64 @@ class widgets:
         entry.pack(fill=X, ipady=5)
         imageLabel.pack(side=RIGHT)
         entryFrame.pack(**kwargs)
+        return imageLabel
+
+    def submitContainer(master, text, image, show="", output=None, self=None, **kwargs):
+        showKeyImage = "regVisibilityOn_icon.png"
+        hoverColor = REGPLACEHOLDCOLOR
+        borderColor = REGTEXTCOLOR
+        if (str(master).startswith(".!loginframe") == True):
+            showKeyImage = "loginVisibilityOn_icon.png"
+            hoverColor = LOGPLACEHOLDCOLOR
+            borderColor = LOGTEXTCOLOR
+        elif (str(master).startswith(".!adminframe") == True):
+            showKeyImage = "admVisibilityOn_icon.png"
+            hoverColor = ADMHOVERCOLOR
+            borderColor = ADMTEXTCOLOR
+
+        if show == "*":
+            submitFrame = CTkFrame(master, fg_color=BACKGNDCOLOR) 
+            entryFrame = CTkFrame(submitFrame, fg_color=BACKGNDCOLOR)
+            entryTextFrame = CTkFrame(submitFrame, fg_color=BACKGNDCOLOR)
+            entryText = CTkLabel(entryTextFrame, text=text, font=App.font(weight="bold"), text_color=CONTRSTEXTCOLOR)
+            textLabel = CTkLabel(entryTextFrame, text="", image=App.image(image, 22, 22))
+            imageLabel = CTkLabel(entryTextFrame, text=None)
+            entry = CTkEntry(entryFrame, show=show, textvariable=output, width=300, fg_color='transparent', border_color=borderColor)
+            btn = CTkButton(submitFrame, image=App.image(showKeyImage, 22, 22), text="", font=App.font(weight="bold"), command=lambda: widgets.showKey(btn, entry), 
+                            fg_color="transparent", hover_color=hoverColor, text_color="black",
+                            border_color=borderColor, border_width=2, 
+                            width=50, height=35)
+        
+            submitFrame.pack(**kwargs)
+            entryTextFrame.pack(fill=X, pady=5)
+            entryFrame.pack(fill=BOTH, side=LEFT)
+            textLabel.pack(side=LEFT)
+            entryText.pack(side=LEFT, padx=5)
+            entry.pack(ipady=5, side=LEFT)
+            imageLabel.pack(side=RIGHT)
+            btn.pack(side=RIGHT, ipady=2)
+            return imageLabel
+
+        submitFrame = CTkFrame(master, fg_color=BACKGNDCOLOR) 
+        entryFrame = CTkFrame(submitFrame, fg_color=BACKGNDCOLOR)
+        entryTextFrame = CTkFrame(submitFrame, fg_color=BACKGNDCOLOR)
+        entryText = CTkLabel(entryTextFrame, text=text, font=App.font(weight="bold"), text_color=CONTRSTEXTCOLOR)
+        textLabel = CTkLabel(entryTextFrame, text="", image=App.image("Search_icon.png", 25, 25))
+        imageLabel = CTkLabel(entryTextFrame, text=None)
+        entry = CTkEntry(entryFrame, show=show, textvariable=output, width=300, fg_color='transparent', border_color=ADMTEXTCOLOR)
+        btn = CTkButton(submitFrame, image=App.image("Search_icon.png", 22, 22), text="", font=App.font(weight="bold"), command=lambda: widgets.admin(self, "Usuário não encontrado!", self.warning, self.entry), 
+                           fg_color="transparent", hover_color=ADMHOVERCOLOR, text_color="black",
+                           border_color=ADMTEXTCOLOR, border_width=2, 
+                           width=50, height=35)
+
+        submitFrame.pack(**kwargs)
+        entryTextFrame.pack(fill=X, pady=5)
+        entryFrame.pack(fill=BOTH, side=LEFT)
+        textLabel.pack(side=LEFT)
+        entryText.pack(side=LEFT, padx=5)
+        entry.pack(ipady=5, side=LEFT)
+        imageLabel.pack(side=RIGHT)
+        btn.pack(side=RIGHT, ipady=2)
         return imageLabel
 
     def buttonContainer(master, text, cmd=None, **kwargs):
@@ -174,11 +298,15 @@ class widgets:
             fgColor = REGTEXTCOLOR
             hoverColor = REGHOVERCOLOR
             textColor = "black"
-            
+        elif (str(master).startswith(".!adminframe") == True):
+            fgColor = ADMTEXTCOLOR
+            hoverColor = ADMHOVERCOLOR
+
         buttonFrame = CTkFrame(master, fg_color=BACKGNDCOLOR)
         Button = CTkButton(buttonFrame, text=text, font=App.font(weight="bold"), fg_color=fgColor, hover_color=hoverColor, text_color=textColor, command=cmd)
         Button.pack(ipady=2)
-        return buttonFrame.pack(**kwargs)
+        buttonFrame.pack(**kwargs)
+        return Button
 
     def personInfoContainer(master, genderAnswer, birthAnswer):
         # Widget exclusivo da janela de registro
@@ -218,6 +346,45 @@ class widgets:
         genderOptionText.pack(side=LEFT)
         genderOption.pack()
 
+    def updateContainer(master, text, image=None, option=None, output=None):
+        hoverColor = REGPLACEHOLDCOLOR
+        borderColor = REGTEXTCOLOR
+        if (str(master).startswith(".!loginframe") == True):
+            hoverColor = LOGPLACEHOLDCOLOR
+            borderColor = LOGTEXTCOLOR
+        elif (str(master).startswith(".!adminframe") == True):
+            hoverColor = ADMHOVERCOLOR
+            borderColor = ADMTEXTCOLOR
+
+
+        personInfoFrame = CTkFrame(master, fg_color=BACKGNDCOLOR)
+
+        menuEntryFrame = CTkFrame(personInfoFrame, fg_color=BACKGNDCOLOR)
+        menuEntryTextFrame = CTkFrame(menuEntryFrame, fg_color=BACKGNDCOLOR)
+        menuOptionText = CTkLabel(menuEntryTextFrame, text=text, font=App.font(weight="bold"), text_color=CONTRSTEXTCOLOR)
+        menuImage = CTkLabel(menuEntryTextFrame, text=None,image=App.image(image, 25, 25))
+        menuEntryContainer = CTkFrame(menuEntryFrame, 
+                                             fg_color=BACKGNDCOLOR, border_color=borderColor, border_width=2, 
+                                             width=108, height=35)
+        entry = CTkEntry(personInfoFrame, show="", textvariable=output, width=260, fg_color='transparent', border_color=borderColor)
+        menuOption = CTkOptionMenu(menuEntryContainer, 
+                                          dropdown_font=App.font(weight="bold", size=13), font=App.font(weight="bold"), 
+                                          width=125, height=34, 
+                                          fg_color=BACKGNDCOLOR, bg_color=borderColor, text_color=hoverColor,
+                                          button_color=borderColor, button_hover_color=hoverColor, 
+                                          dropdown_fg_color=BACKGNDCOLOR, dropdown_text_color=borderColor, dropdown_hover_color=hoverColor, 
+                                          values=["Nome", "Email", "Senha", "Nascimento", "Gênero"], variable=option)
+
+
+        personInfoFrame.pack(fill=X, pady=5)
+        menuEntryFrame.pack(side=LEFT)
+        menuEntryTextFrame.pack(fill=X, pady=5)
+        menuImage.pack(ipadx=3, side=LEFT)
+        menuOptionText.pack(side=LEFT)
+        menuEntryContainer.pack(fill=X, ipady=2, ipadx=10)
+        menuOption.place(x=2, y=2)
+        entry.pack(ipady=5, pady=1, side=BOTTOM)
+
     def login(master, texto, var, *args):
         if (master.user.get() == "") or (master.password.get() == ""):  
             for el in args:
@@ -235,6 +402,8 @@ class widgets:
         var.configure(text_color = CONTRSTEXTCOLOR)
         var.configure(text = "Conectado!")
         master.update()
+        if (master.user.get() == "admin") and (master.password.get() == "admin"):
+            App.changeFrames(master, True)
         
     def registro(master, texto, var, *args):
             if (master.name.get() == "") or (master.email.get() == "") or (master.password.get() == ""):
@@ -270,6 +439,31 @@ class widgets:
             print(f"Nome: {master.name.get()}\nEmail: {master.email.get()}\nSenha: {master.password.get()}\nData de Nascimento: {master.birthdate.get()}\nGênero: {master.gender.get()}")
             return master.update()
 
+    def admin(master, texto, var, *args):
+        if master.search.get() == "":
+            for el in args:
+                el.configure(image=App.image("Cancel_icon.png", 25, 25))  
+            var.configure(fg_color=CANCELICONCOLOR)
+            var.configure(text_color = CONTRSTEXTCOLOR)
+            var.configure(text = texto)
+            return master.update()
+        
+        for el in args:
+            el.configure(image=App.image("Check_icon.png", 25, 25))
+
+        var.configure(fg_color=CHECKICONCOLOR)
+        var.configure(text_color = CONTRSTEXTCOLOR)
+        var.configure(text = "Usuário encontrado!")
+        master.update()
+
+    def showKey(btn, entry):
+        entry.configure(show= "") if (entry.cget("show") == "*") else entry.configure(show= "*")
+        if entry.cget("border_color") == LOGTEXTCOLOR:
+            return btn.configure(image=App.image("loginVisibilityOn_icon.png", 22, 22) if entry.cget("show") == "*" else App.image("loginVisibilityOff_icon.png", 22, 22))
+        if entry.cget("border_color") == REGTEXTCOLOR:
+            return btn.configure(image=App.image("regVisibilityOn_icon.png", 22, 22) if entry.cget("show") == "*" else App.image("regVisibilityOff_icon.png", 22, 22))    
+        
+        return btn.configure(image=App.image("admVisibilityOn_icon.png", 22, 22) if entry.cget("show") == "*" else App.image("adminVisibilityOff_icon.png", 22, 22))
 
 class dataControl:
     def __init__(self, db_name):
