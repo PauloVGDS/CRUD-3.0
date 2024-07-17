@@ -164,10 +164,8 @@ class adminFrame(CTkFrame):
         self.tabview = CTkTabview(self.middleFrame, height=314,
                                   segmented_button_fg_color=BACKGNDCOLOR, segmented_button_selected_color=BACKGNDCOLOR, segmented_button_selected_hover_color=BACKGNDCOLOR, segmented_button_unselected_hover_color=BACKGNDCOLOR, segmented_button_unselected_color=BACKGNDCOLOR, 
                                   text_color=BACKGNDCOLOR, state=DISABLED, text_color_disabled=BACKGNDCOLOR, border_color=ADMTEXTCOLOR, border_width=2, fg_color=BACKGNDCOLOR)
-        self.tabview.pack(fill=X)
         self.tabview.add("0")
         widgets.textContainer(master=self.tabview.tab("0"), text="Read", fontSize=22, textColor=ADMTEXTCOLOR)
-        widgets.textContainer(master=self.tabview.tab("0"), text="Pesquise um email para ler suas informações!", fontSize=18, textColor=CONTRSTEXTCOLOR)
         self.nome = widgets.textContainer(master=self.tabview.tab("0"), text="Nome:", fontSize=16, textColor=CONTRSTEXTCOLOR, fill=X, padx=8)
         self.email = widgets.textContainer(master=self.tabview.tab("0"), text="Email:", fontSize=16, textColor=CONTRSTEXTCOLOR, fill=X, padx=8)
         self.password = widgets.textContainer(master=self.tabview.tab("0"), text="Senha:", fontSize=16, textColor=CONTRSTEXTCOLOR, fill=X, padx=8)
@@ -176,7 +174,7 @@ class adminFrame(CTkFrame):
         
         self.tabview.add("1")    
         widgets.textContainer(master=self.tabview.tab("1"), text="Update", fontSize=22, textColor=ADMTEXTCOLOR)
-        widgets.updateContainer(self.tabview .tab("1"), text="Opções:", image="personEdit_icon.png", option=self.updateOption, output=self.updateOutput)
+        self.updateCont = widgets.updateContainer(self.tabview .tab("1"), text="Opções:", image="personEdit_icon.png", option=self.updateOption, output=self.updateOutput)
         widgets.textContainer(master=self.tabview.tab("1"), text="Selecione a opção que deseja alterar!", fontSize=18, textColor=CONTRSTEXTCOLOR)
 
         self.tabview.add("2")
@@ -194,11 +192,11 @@ class adminFrame(CTkFrame):
             if c == 0:
                 widgets.buttonContainer(master=buttonFrame, text="", cmd=lambda : App.changeFrames(self)).configure(width=50, fg_color='transparent', border_color=WARNINGCOLOR, hover_color=WARNINGHOVERCOLOR,border_width=2, image=App.image("Exit_icon.png", 20, 20))
             elif c == 1:
-                widgets.buttonContainer(master=buttonFrame, text="").configure(width=50, fg_color='transparent', border_color=ADMTEXTCOLOR, border_width=2, image=App.image("personEdit_icon.png", 20, 20))
+                widgets.buttonContainer(master=buttonFrame, text="", cmd=lambda : widgets.admin(self, "Preencha corretamente as opções!", self.warning, self.updateCont)).configure(width=50, fg_color='transparent', border_color=ADMTEXTCOLOR, border_width=2, image=App.image("personEdit_icon.png", 20, 20))
             elif c == 2:
-                widgets.buttonContainer(master=buttonFrame, text="").configure(width=50, fg_color='transparent', border_color=CANCELICONCOLOR, border_width=2, image=App.image("personRemove_icon.png", 20, 20), hover_color=CANCELHOVERCOLOR)
+                widgets.buttonContainer(master=buttonFrame, text="", cmd=lambda : widgets.admin(self, "Pesquise um usuário primeiro!", (self.warning))).configure(width=50, fg_color='transparent', border_color=CANCELICONCOLOR, border_width=2, image=App.image("personRemove_icon.png", 20, 20), hover_color=CANCELHOVERCOLOR)
             
-
+        self.tabview.pack(fill=X)
         self.topFrame.pack(expand=True, fill=BOTH, pady=30)
         self.middleFrame.pack(expand=True, fill=BOTH, padx=18)
         self.bottomFrame.pack(expand=True, fill=BOTH)
@@ -275,7 +273,7 @@ class widgets:
         textLabel = CTkLabel(entryTextFrame, text="", image=App.image("Search_icon.png", 25, 25))
         imageLabel = CTkLabel(entryTextFrame, text=None)
         entry = CTkEntry(entryFrame, show=show, textvariable=output, width=300, fg_color='transparent', border_color=ADMTEXTCOLOR)
-        btn = CTkButton(submitFrame, image=App.image("Search_icon.png", 22, 22), text="", font=App.font(weight="bold"), command=lambda: widgets.admin(self, "Usuário não encontrado!", self.warning, self.entry), 
+        btn = CTkButton(submitFrame, image=App.image("Search_icon.png", 22, 22), text="", font=App.font(weight="bold"), command=lambda: widgets.admin(self, "Busque um email primeiramente!", self.warning, self.entry), 
                            fg_color="transparent", hover_color=ADMHOVERCOLOR, text_color="black",
                            border_color=ADMTEXTCOLOR, border_width=2, 
                            width=50, height=35)
@@ -366,6 +364,7 @@ class widgets:
         menuEntryContainer = CTkFrame(menuEntryFrame, 
                                              fg_color=BACKGNDCOLOR, border_color=borderColor, border_width=2, 
                                              width=108, height=35)
+        imageLabel = CTkLabel(menuEntryTextFrame, text=None)
         entry = CTkEntry(personInfoFrame, show="", textvariable=output, width=260, fg_color='transparent', border_color=borderColor)
         menuOption = CTkOptionMenu(menuEntryContainer, 
                                           dropdown_font=App.font(weight="bold", size=13), font=App.font(weight="bold"), 
@@ -382,8 +381,10 @@ class widgets:
         menuImage.pack(ipadx=3, side=LEFT)
         menuOptionText.pack(side=LEFT)
         menuEntryContainer.pack(fill=X, ipady=2, ipadx=10)
+        imageLabel.pack(side=RIGHT)
         menuOption.place(x=2, y=2)
         entry.pack(ipady=5, pady=1, side=BOTTOM)
+        return imageLabel
 
     def login(master, texto, var, *args):
         if (master.user.get() == "") or (master.password.get() == ""):  
@@ -439,22 +440,33 @@ class widgets:
             print(f"Nome: {master.name.get()}\nEmail: {master.email.get()}\nSenha: {master.password.get()}\nData de Nascimento: {master.birthdate.get()}\nGênero: {master.gender.get()}")
             return master.update()
 
-    def admin(master, texto, var, *args):
-        if master.search.get() == "":
+    def admin(master, texto="", var=None, *args):
+        # Var = Mensagem de erro
+        # Args = Imagem de X nas entrys
+        
+        if master.search.get() == "" : # or master.search.get() not in DATABASE:
+            for el in args:
+                el.configure(image=App.image("Cancel_icon.png", 25, 25))  
+            var.configure(fg_color=CANCELICONCOLOR)
+            var.configure(text_color = CONTRSTEXTCOLOR)
+            # if master.search.get() not in DATABASE:
+                #var.configure(text = "Usuário não encontrado!")
+            var.configure(text = texto)
+            return master.update()
+        
+        if master.updateOutput.get() == "" or master.updateOption.get() == "":
             for el in args:
                 el.configure(image=App.image("Cancel_icon.png", 25, 25))  
             var.configure(fg_color=CANCELICONCOLOR)
             var.configure(text_color = CONTRSTEXTCOLOR)
             var.configure(text = texto)
-            return master.update()
-        
+            
+
         for el in args:
             el.configure(image=App.image("Check_icon.png", 25, 25))
-
         var.configure(fg_color=CHECKICONCOLOR)
         var.configure(text_color = CONTRSTEXTCOLOR)
         var.configure(text = "Usuário encontrado!")
-        master.update()
 
     def showKey(btn, entry):
         entry.configure(show= "") if (entry.cget("show") == "*") else entry.configure(show= "*")
