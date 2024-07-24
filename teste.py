@@ -1,9 +1,6 @@
 import mysql.connector
 import hmac, hashlib
 
-#cnx = mysql.connector.connect(user='PauloV', password='Paulov1732', host='localhost', auth_plugin= 'mysql_native_password')
-#cnx.close()
-
 
 class dataControl:
     def __init__(self, user, password, host, auth_plugin):
@@ -75,26 +72,31 @@ class dataControl:
         cursor.execute("DELETE FROM usuarios WHERE email = %s", (email,))
         return cursor
     
-    def insert(self, email):
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM usuarios WHERE email = %s", (email,))
-        return cursor
+    def insert(self, nome, email, senha, birth="", genero=""):
+        try:
+            key = br"\x87\xcax\xd2\xa9\xc6\xad\xcc\xc6\xeds]\x8d\xdb>\x18\xa9]\xcd\xf3!\x00\xecM\xc6\xfb\xc4\xd4\xb3\xb0C\x1b"
+            hashword = hmac.digest(key=key, msg=senha.encode(), digest=hashlib.sha256)
+            cursor = self.connection.cursor()
+            cursor.execute("INSERT INTO usuarios (nome, email, senha, birth, genero) VALUES (%s, %s, %s, %s, %s);", (nome, email, hashword, birth, genero))
+        except mysql.connector.errors.Error as erro:
+            print(f"Não foi possível inserir os dados por causa: \t{erro}")
+            return False
 
 
 db = dataControl("PauloV", "Paulov1732?", "localhost", "mysql_native_password")
 db.connect()
-db.create()
+db.insert("Paulo Vinicius Gomes da Silva", "teste2@gmail.com", "PauloV123")
 db.disconnect()
 
 
 
-
-hashword = hmac.digest(key=b"Incansavel", msg=b"PauloVinicius", digest=hashlib.sha256)
-
-
-password = hmac.digest(b"Incansavel", b"PauloV", hashlib.sha256)
+teste = "Paulo"
+hashword = hmac.digest(key=br"\x87\xcax\xd2\xa9\xc6\xad\xcc\xc6\xeds]\x8d\xdb>\x18\xa9]\xcd\xf3!\x00\xecM\xc6\xfb\xc4\xd4\xb3\xb0C\x1b", msg=teste.encode(), digest=hashlib.sha256)
+password = hmac.digest(br"\x87\xcax\xd2\xa9\xc6\xad\xcc\xc6\xeds]\x8d\xdb>\x18\xa9]\xcd\xf3!\x00\xecM\xc6\xfb\xc4\xd4\xb3\xb0C\x1b", b"Paulo", hashlib.sha256)
 
 if hmac.compare_digest(hashword , password):
     print(".")
 else:
-    print()
+    print(hashword)
+
+
