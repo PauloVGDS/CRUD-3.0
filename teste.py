@@ -57,20 +57,40 @@ class dataControl:
             return False
 
     def read(self, email):
-
-        cursor = self.connection.cursor(buffered=True)
-        cursor.execute("SELECT * FROM usuarios WHERE email = %s;", (email,))
-
+        try:
+            cursor = self.connection.cursor(buffered=True)
+            cursor.execute("SELECT * FROM usuarios WHERE email = %s;", (email,))
+            answer = cursor.fetchone()
+            if answer == None:
+                raise mysql.connector.errors.Error
+            return answer
+        except mysql.connector.errors.Error as erro:
+            print(f"Não foi possível concluir a operação: {erro}")
+            return False
 
     def update(self, email, option, answer):
-        cursor = self.connection.cursor()
-        cursor.execute("UPDATE usuarios SET %s = %s WHERE email = %s;", (option, answer, email))
-        return cursor
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("UPDATE usuarios SET %s = %s WHERE email = %s;", (option, answer, email))
+            return True
+        except mysql.connector.errors.Error as erro:
+            print(f"Não foi possível concluir a operação: {erro}")
+            return False
+
 
     def delete(self, email):
-        cursor = self.connection.cursor()
-        cursor.execute("DELETE FROM usuarios WHERE email = %s", (email,))
-        return cursor
+        try:
+            erro = None
+            cursor = self.connection.cursor()
+            cursor.execute("DELETE FROM usuarios WHERE email = %s", (email,))
+        except mysql.connector.errors.Error as erro:
+            print(f"Não foi possível concluír a operação: {erro}")
+            return False
+        
+        finally:
+            if erro == None:
+                return True
+            return False
     
     def insert(self, nome, email, senha, birth="", genero=""):
         try:
@@ -78,14 +98,20 @@ class dataControl:
             hashword = hmac.digest(key=key, msg=senha.encode(), digest=hashlib.sha256)
             cursor = self.connection.cursor()
             cursor.execute("INSERT INTO usuarios (nome, email, senha, birth, genero) VALUES (%s, %s, %s, %s, %s);", (nome, email, hashword, birth, genero))
+
         except mysql.connector.errors.Error as erro:
             print(f"Não foi possível inserir os dados por causa: \t{erro}")
+            return False
+        finally:
+            if erro == None:
+                return True
             return False
 
 
 db = dataControl("PauloV", "Paulov1732?", "localhost", "mysql_native_password")
 db.connect()
-db.insert("Paulo Vinicius Gomes da Silva", "teste2@gmail.com", "PauloV123")
+#db.insert("Paulo Vinicius Gomes da Silva", "teste2@gmail.com", "PauloV123")
+print(db.read(""))
 db.disconnect()
 
 
@@ -94,9 +120,9 @@ teste = "Paulo"
 hashword = hmac.digest(key=br"\x87\xcax\xd2\xa9\xc6\xad\xcc\xc6\xeds]\x8d\xdb>\x18\xa9]\xcd\xf3!\x00\xecM\xc6\xfb\xc4\xd4\xb3\xb0C\x1b", msg=teste.encode(), digest=hashlib.sha256)
 password = hmac.digest(br"\x87\xcax\xd2\xa9\xc6\xad\xcc\xc6\xeds]\x8d\xdb>\x18\xa9]\xcd\xf3!\x00\xecM\xc6\xfb\xc4\xd4\xb3\xb0C\x1b", b"Paulo", hashlib.sha256)
 
-if hmac.compare_digest(hashword , password):
-    print(".")
-else:
-    print(hashword)
+#if hmac.compare_digest(hashword , password):
+#    print(True)
+#else:
+#    print(False)
 
 
