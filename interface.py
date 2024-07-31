@@ -22,18 +22,25 @@ CHECKICONCOLOR = "#107e10"
 CANCELICONCOLOR = "#c42b1c"
 CANCELHOVERCOLOR = "#501111"
 HASHKEY = br"\x87\xcax\xd2\xa9\xc6\xad\xcc\xc6\xeds]\x8d\xdb>\x18\xa9]\xcd\xf3!\x00\xecM\xc6\xfb\xc4\xd4\xb3\xb0C\x1b"
+
 CURRENTPATH = os.path.dirname(os.path.realpath(__file__))
+
 
 class App(CTk):
     def __init__(self, master=None):
         super().__init__()
         self.title("CRUD 3.0")
-        self.geometry("800x600")
         self.maxsize(800, 600)
         self.minsize(800, 600)
-        
+
+        self.database = dataControl("root", "", "localhost", "mysql_native_password", self)
+        self.after(100, self.database.connect)
+        self.protocol("WM_DELETE_WINDOW", self.database.disconnect)
+
         self.currentFrame = adminFrame(master=self)
         self.currentFrame.pack(expand=True, fill=BOTH, anchor="center")
+    
+
 
     @staticmethod
     def font(font="Titillium Web", size=15, weight="normal"):
@@ -96,7 +103,7 @@ class loginFrame(CTkFrame):
 
         widgets.textContainer(master=self.topFrame, text="Entre em sua conta.", side=BOTTOM, fill=BOTH, padx=18)
         widgets.textContainer(master=self.topFrame, text="Bem vindo de volta!", fontSize=38, weight="bold", side=BOTTOM, fill=BOTH, padx=18)
-        self.userInput = widgets.inputContainer(self.middleFrame, "Usuário", "Person-icon.png", output=self.user, fill=X)
+        self.userInput = widgets.inputContainer(self.middleFrame, "Email", "Person-icon.png", output=self.user, fill=X)
         self.passwordInput = widgets.submitContainer(self.middleFrame, "Senha", "Lock-icon.png", show="*", output=self.password, fill=X)
         self.warning = widgets.textContainer(master=self.buttonFrame, text="", textColor=CONTRSTEXTCOLOR, side=BOTTOM)
 
@@ -169,11 +176,7 @@ class adminFrame(CTkFrame):
                                   text_color=BACKGNDCOLOR, state=DISABLED, text_color_disabled=BACKGNDCOLOR, border_color=ADMTEXTCOLOR, border_width=2, fg_color=BACKGNDCOLOR)
         self.tabview.add("0")
         widgets.textContainer(master=self.tabview.tab("0"), text="Read", fontSize=22, textColor=ADMTEXTCOLOR)
-        self.nome = widgets.textContainer(master=self.tabview.tab("0"), text="Nome:", fontSize=16, textColor=CONTRSTEXTCOLOR, fill=X, padx=8)
-        self.email = widgets.textContainer(master=self.tabview.tab("0"), text="Email:", fontSize=16, textColor=CONTRSTEXTCOLOR, fill=X, padx=8)
-        self.password = widgets.textContainer(master=self.tabview.tab("0"), text="Senha:", fontSize=16, textColor=CONTRSTEXTCOLOR, fill=X, padx=8)
-        self.birth = widgets.textContainer(master=self.tabview.tab("0"), text="Data de Nascimento:", fontSize=16, textColor=CONTRSTEXTCOLOR, fill=X, padx=8)
-        self.gender = widgets.textContainer(master=self.tabview.tab("0"), text="Gênero:", fontSize=16, textColor=CONTRSTEXTCOLOR, fill=X, padx=8)
+        self.result = widgets.textContainer(master=self.tabview.tab("0"), text="Pesquise um email para ler suas informações!", fontSize=16, textColor=CONTRSTEXTCOLOR)
         
         self.tabview.add("1")    
         widgets.textContainer(master=self.tabview.tab("1"), text="Update", fontSize=22, textColor=ADMTEXTCOLOR)
@@ -276,7 +279,7 @@ class widgets:
         textLabel = CTkLabel(entryTextFrame, text="", image=App.image("Search_icon.png", 25, 25))
         imageLabel = CTkLabel(entryTextFrame, text=None)
         entry = CTkEntry(entryFrame, show=show, textvariable=output, width=300, fg_color='transparent', border_color=ADMTEXTCOLOR)
-        btn = CTkButton(submitFrame, image=App.image("Search_icon.png", 22, 22), text="", font=App.font(weight="bold"), command=lambda: widgets.admin(self, "Busque um email primeiramente!", self.warning, self.entry), 
+        btn = CTkButton(submitFrame, image=App.image("Search_icon.png", 22, 22), text="", font=App.font(weight="bold"), command=lambda: widgets.admin(self, "Busque um email primeiramente!", self.warning, output, self.entry,), 
                            fg_color="transparent", hover_color=ADMHOVERCOLOR, text_color="black",
                            border_color=ADMTEXTCOLOR, border_width=2, 
                            width=50, height=35)
@@ -390,24 +393,31 @@ class widgets:
         return imageLabel
 
     def login(master, texto, var, *args):
-        if (master.user.get() == "") or (master.password.get() == ""):  
-            for el in args:
-                el.configure(image=App.image("Cancel_icon.png", 25, 25))    
+        try:
+            user = app.database.read(master.user.get(), True)
+            hashword = hmac.digest(key=HASHKEY, msg=(master.password.get()).encode(), digest=hashlib.sha256)
+            hashword = hmac.compare_digest(hashword, user[3])
+            if (master.user.get() == "") or (master.password.get() == "") or not (user and hashword):  
+                for el in args:
+                    el.configure(image=App.image("Cancel_icon.png", 25, 25))    
 
-            var.configure(fg_color=CANCELICONCOLOR)
-            var.configure(text_color = CONTRSTEXTCOLOR)
-            var.configure(text = texto)
-            return master.update()
+                var.configure(fg_color=CANCELICONCOLOR)
+                var.configure(text_color = CONTRSTEXTCOLOR)
+                var.configure(text = texto)
+                return master.update()
         
-        for el in args:
-            el.configure(image=App.image("Check_icon.png", 25, 25))
+            for el in args:
+                el.configure(image=App.image("Check_icon.png", 25, 25))
+            var.configure(fg_color=CHECKICONCOLOR)
+            var.configure(text_color = CONTRSTEXTCOLOR)
+            var.configure(text = "Conectado!")
+            return master.update()
+        except TypeError:
+            pass
 
-        var.configure(fg_color=CHECKICONCOLOR)
-        var.configure(text_color = CONTRSTEXTCOLOR)
-        var.configure(text = "Conectado!")
-        master.update()
-        if (master.user.get() == "admin") and (master.password.get() == "admin"):
-            App.changeFrames(master, True)
+        finally:
+            if (master.user.get() == "admin") and (master.password.get() == "admin"):
+                return App.changeFrames(master, True)
         
     def registro(master, texto, var, *args):
             if (master.name.get() == "") or (master.email.get() == "") or (master.password.get() == ""):
@@ -431,9 +441,7 @@ class widgets:
                 var.configure(text = texto)
                 return master.update()
             
-            # Data de nascimento formatada corretamente
-            if re.search(r"^[0-9]{2}/[0-9]{2}/[0-9]{4}$", master.birthdate.get()):
-                pass
+
 
             for el in args:
                 el.configure(image=App.image("Check_icon.png", 25, 25))
@@ -441,9 +449,10 @@ class widgets:
             var.configure(text_color = CONTRSTEXTCOLOR)
             var.configure(text = "Registrado!")
             print(f"Nome: {master.name.get()}\nEmail: {master.email.get()}\nSenha: {master.password.get()}\nData de Nascimento: {master.birthdate.get()}\nGênero: {master.gender.get()}")
+            app.database.insert(master.name.get(), master.email.get(), master.password.get(), master.birthdate.get(), master.gender.get())
             return master.update()
 
-    def admin(master, texto="", var=None, *args):
+    def admin(master, texto="", var=None, mode=1, *args):
         # Var = Mensagem de erro
         # Args = Imagem de X nas entrys
         
@@ -464,7 +473,6 @@ class widgets:
             var.configure(text_color = CONTRSTEXTCOLOR)
             var.configure(text = texto)
             
-
         for el in args:
             el.configure(image=App.image("Check_icon.png", 25, 25))
         var.configure(fg_color=CHECKICONCOLOR)
@@ -482,11 +490,13 @@ class widgets:
 
 
 class dataControl:
-    def __init__(self, user, password, host, auth_plugin):
+    def __init__(self, user, password, host, auth_plugin, application = None):
         self.user = user
         self.password = password
         self.host = host
         self.auth_plugin = auth_plugin
+        self.application = application
+    
 
     def connect(self):
         try: 
@@ -500,6 +510,8 @@ class dataControl:
             if self.connection.is_connected():
                 print("Conexão realizada com sucesso!")
                 return True
+            print("Não foi possível conectar ao banco de dados!")
+            self.application.destroy()
             return False
 
     def disconnect(self):
@@ -510,6 +522,7 @@ class dataControl:
         finally:
             if not self.connection.is_connected():
                 print("Desconectado com sucesso!")
+                self.application.destroy()
                 return True
             return False
         
@@ -535,14 +548,18 @@ class dataControl:
             print(f"Não foi possível criar a tabela: \t{erro}")
             return False
 
-    def read(self, email):
+    def read(self, answer, option=True):
         try:
             cursor = self.connection.cursor(buffered=True)
-            cursor.execute("SELECT * FROM usuarios WHERE email = %s;", (email,))
-            answer = cursor.fetchone()
-            if answer == None:
+            if option:
+                cursor.execute("SELECT * FROM usuarios WHERE email = %s;", (answer,))
+            else:
+                cursor.execute("SELECT * FROM usuarios WHERE nome = %s;", (answer,))
+            result = cursor.fetchone()
+            if result == None:
                 raise mysql.connector.errors.Error
-            return answer
+            return result
+        
         except mysql.connector.errors.Error as erro:
             print(f"Não foi possível concluir a operação: {erro}")
             return False
@@ -596,12 +613,13 @@ class dataControl:
 
 
 
-db = dataControl("host", "password", "localhost", "mysql_native_password")
-db.connect()
-db.insert("Paulo Vinicius", "teste2@gmail.com", "Paulo123", "12-08-2004", "Masculino")
-db.update("teste2@gmail.com", "senha", "PauloVGDS")
-db.delete("teste2@gmail.com")
-db.disconnect()
+#db = dataControl("host", "password", "localhost", "mysql_native_password")
+#db.connect()
+#db.insert("Paulo Vinicius", "teste2@gmail.com", "Paulo123", "12-08-2004", "Masculino")
+#db.update("teste2@gmail.com", "senha", "PauloVGDS")
+#db.delete("teste2@gmail.com")
+#db.disconnect()
 
-#app = App()
-#app.mainloop()
+app = App()
+app.mainloop()
+
