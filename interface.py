@@ -168,7 +168,7 @@ class adminFrame(CTkFrame):
 
         widgets.textContainer(master=self.topFrame, text="Somente pessoas autorizadas!", side=BOTTOM, fill=BOTH, padx=18)
         widgets.textContainer(master=self.topFrame, text="Administação", fontSize=38, side=BOTTOM, fill=BOTH, padx=18)
-        self.entry = widgets.submitContainer(master=self.middleFrame, text="Pesquisar", image="Search_icon.png", output=self.search, self=self, fill=X)
+        self.entry = widgets.searchContainer(master=self.middleFrame, text="Pesquisar", image="Search_icon.png", output=self.search, self=self, fill=X)
         self.warning = widgets.textContainer(master=self.bottomFrame, text="", textColor=CONTRSTEXTCOLOR, side=BOTTOM, pady=18)
 
         self.tabview = CTkTabview(self.middleFrame, height=314,
@@ -176,7 +176,7 @@ class adminFrame(CTkFrame):
                                   text_color=BACKGNDCOLOR, state=DISABLED, text_color_disabled=BACKGNDCOLOR, border_color=ADMTEXTCOLOR, border_width=2, fg_color=BACKGNDCOLOR)
         self.tabview.add("0")
         widgets.textContainer(master=self.tabview.tab("0"), text="Read", fontSize=22, textColor=ADMTEXTCOLOR)
-        self.result = widgets.textContainer(master=self.tabview.tab("0"), text="Pesquise um email para ler suas informações!", fontSize=16, textColor=CONTRSTEXTCOLOR)
+        self.result = widgets.textContainer(master=self.tabview.tab("0"), text="Pesquise um email para ler suas informações!", fontSize=18, textColor=CONTRSTEXTCOLOR)
         
         self.tabview.add("1")    
         widgets.textContainer(master=self.tabview.tab("1"), text="Update", fontSize=22, textColor=ADMTEXTCOLOR)
@@ -198,9 +198,9 @@ class adminFrame(CTkFrame):
             if c == 0:
                 widgets.buttonContainer(master=buttonFrame, text="", cmd=lambda : App.changeFrames(self)).configure(width=50, fg_color='transparent', border_color=WARNINGCOLOR, hover_color=WARNINGHOVERCOLOR,border_width=2, image=App.image("Exit_icon.png", 20, 20))
             elif c == 1:
-                widgets.buttonContainer(master=buttonFrame, text="", cmd=lambda : widgets.admin(self, "Preencha corretamente as opções!", self.warning, self.updateCont)).configure(width=50, fg_color='transparent', border_color=ADMTEXTCOLOR, border_width=2, image=App.image("personEdit_icon.png", 20, 20))
+                widgets.buttonContainer(master=buttonFrame, text="").configure(width=50, fg_color='transparent', border_color=ADMTEXTCOLOR, border_width=2, image=App.image("personEdit_icon.png", 20, 20))
             elif c == 2:
-                widgets.buttonContainer(master=buttonFrame, text="", cmd=lambda : widgets.admin(self, "Pesquise um usuário primeiro!", (self.warning))).configure(width=50, fg_color='transparent', border_color=CANCELICONCOLOR, border_width=2, image=App.image("personRemove_icon.png", 20, 20), hover_color=CANCELHOVERCOLOR)
+                widgets.buttonContainer(master=buttonFrame, text="").configure(width=50, fg_color='transparent', border_color=CANCELICONCOLOR, border_width=2, image=App.image("personRemove_icon.png", 20, 20), hover_color=CANCELHOVERCOLOR)
             
         self.tabview.pack(fill=X)
         self.topFrame.pack(expand=True, fill=BOTH, pady=30)
@@ -249,29 +249,29 @@ class widgets:
             hoverColor = ADMHOVERCOLOR
             borderColor = ADMTEXTCOLOR
 
-        if show == "*":
-            submitFrame = CTkFrame(master, fg_color=BACKGNDCOLOR) 
-            entryFrame = CTkFrame(submitFrame, fg_color=BACKGNDCOLOR)
-            entryTextFrame = CTkFrame(submitFrame, fg_color=BACKGNDCOLOR)
-            entryText = CTkLabel(entryTextFrame, text=text, font=App.font(weight="bold"), text_color=CONTRSTEXTCOLOR)
-            textLabel = CTkLabel(entryTextFrame, text="", image=App.image(image, 22, 22))
-            imageLabel = CTkLabel(entryTextFrame, text=None)
-            entry = CTkEntry(entryFrame, show=show, textvariable=output, width=300, fg_color='transparent', border_color=borderColor)
-            btn = CTkButton(submitFrame, image=App.image(showKeyImage, 22, 22), text="", font=App.font(weight="bold"), command=lambda: widgets.showKey(btn, entry), 
-                            fg_color="transparent", hover_color=hoverColor, text_color="black",
-                            border_color=borderColor, border_width=2, 
-                            width=50, height=35)
-        
-            submitFrame.pack(**kwargs)
-            entryTextFrame.pack(fill=X, pady=5)
-            entryFrame.pack(fill=BOTH, side=LEFT)
-            textLabel.pack(side=LEFT)
-            entryText.pack(side=LEFT, padx=5)
-            entry.pack(ipady=5, side=LEFT)
-            imageLabel.pack(side=RIGHT)
-            btn.pack(side=RIGHT, ipady=2)
-            return imageLabel
+        submitFrame = CTkFrame(master, fg_color=BACKGNDCOLOR) 
+        entryFrame = CTkFrame(submitFrame, fg_color=BACKGNDCOLOR)
+        entryTextFrame = CTkFrame(submitFrame, fg_color=BACKGNDCOLOR)
+        entryText = CTkLabel(entryTextFrame, text=text, font=App.font(weight="bold"), text_color=CONTRSTEXTCOLOR)
+        textLabel = CTkLabel(entryTextFrame, text="", image=App.image(image, 22, 22))
+        imageLabel = CTkLabel(entryTextFrame, text=None)
+        entry = CTkEntry(entryFrame, show=show, textvariable=output, width=300, fg_color='transparent', border_color=borderColor)
+        btn = CTkButton(submitFrame, image=App.image(showKeyImage, 22, 22), text="", font=App.font(weight="bold"), command=lambda: widgets.showKey(btn, entry), 
+                        fg_color="transparent", hover_color=hoverColor, text_color="black",
+                        border_color=borderColor, border_width=2, 
+                        width=50, height=35)
+    
+        submitFrame.pack(**kwargs)
+        entryTextFrame.pack(fill=X, pady=5)
+        entryFrame.pack(fill=BOTH, side=LEFT)
+        textLabel.pack(side=LEFT)
+        entryText.pack(side=LEFT, padx=5)
+        entry.pack(ipady=5, side=LEFT)
+        imageLabel.pack(side=RIGHT)
+        btn.pack(side=RIGHT, ipady=2)
+        return imageLabel
 
+    def searchContainer(master, text, image, show="", output=None, self=None, **kwargs):
         submitFrame = CTkFrame(master, fg_color=BACKGNDCOLOR) 
         entryFrame = CTkFrame(submitFrame, fg_color=BACKGNDCOLOR)
         entryTextFrame = CTkFrame(submitFrame, fg_color=BACKGNDCOLOR)
@@ -279,7 +279,7 @@ class widgets:
         textLabel = CTkLabel(entryTextFrame, text="", image=App.image("Search_icon.png", 25, 25))
         imageLabel = CTkLabel(entryTextFrame, text=None)
         entry = CTkEntry(entryFrame, show=show, textvariable=output, width=300, fg_color='transparent', border_color=ADMTEXTCOLOR)
-        btn = CTkButton(submitFrame, image=App.image("Search_icon.png", 22, 22), text="", font=App.font(weight="bold"), command=lambda: widgets.admin(self, "Busque um email primeiramente!", self.warning, output, self.entry,), 
+        btn = CTkButton(submitFrame, image=App.image("Search_icon.png", 22, 22), text="", font=App.font(weight="bold"), command=lambda: widgets.admin(self, "Busque um email primeiramente!", self.warning, self.entry), 
                            fg_color="transparent", hover_color=ADMHOVERCOLOR, text_color="black",
                            border_color=ADMTEXTCOLOR, border_width=2, 
                            width=50, height=35)
@@ -452,11 +452,13 @@ class widgets:
             app.database.insert(master.name.get(), master.email.get(), master.password.get(), master.birthdate.get(), master.gender.get())
             return master.update()
 
-    def admin(master, texto="", var=None, mode=1, *args):
+    def admin(master, texto="", var=None, output=None, *args):
         # Var = Mensagem de erro
         # Args = Imagem de X nas entrys
-        
-        if master.search.get() == "" : # or master.search.get() not in DATABASE:
+        person = app.database.read(master.search.get())
+        if not person:
+            print("Usuário não encontrado!")
+
             for el in args:
                 el.configure(image=App.image("Cancel_icon.png", 25, 25))  
             var.configure(fg_color=CANCELICONCOLOR)
@@ -477,7 +479,13 @@ class widgets:
             el.configure(image=App.image("Check_icon.png", 25, 25))
         var.configure(fg_color=CHECKICONCOLOR)
         var.configure(text_color = CONTRSTEXTCOLOR)
-        var.configure(text = "Usuário encontrado!")
+        var.configure(text = f"Usuário encontrado!")
+        master.result.configure(text=f"""Nome: {person[1]}
+Email: {person[2]}
+Senha: CRIPTOGRAFADA!
+Data de Nascimento: {person[4]}
+Gênero: {person[5]}""")
+    
 
     def showKey(btn, entry):
         entry.configure(show= "") if (entry.cget("show") == "*") else entry.configure(show= "*")
