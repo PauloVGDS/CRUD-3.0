@@ -37,7 +37,11 @@ class App(CTk):
         self.after(100, self.database.connect)
         self.protocol("WM_DELETE_WINDOW", self.database.disconnect)
 
-        self.currentFrame = adminFrame(master=self)
+
+        self.adm = adminFrame(master=self)
+        self.log = loginFrame(master=self)
+        self.reg = registerFrame(master=self)
+        self.currentFrame = self.adm
         self.currentFrame.pack(expand=True, fill=BOTH, anchor="center")
     
 
@@ -187,7 +191,7 @@ class adminFrame(CTkFrame):
         widgets.textContainer(master=self.tabview.tab("2"), text="Delete", fontSize=22, textColor=ADMTEXTCOLOR)
         widgets.textContainer(master=self.tabview.tab("2"), text="Usuários deletados não podem ser restaurados!", fontSize=16, textColor=CONTRSTEXTCOLOR)
         widgets.textContainer(master=self.tabview.tab("2"), text="Você tem certeza que deseja deletar o usuário:", fontSize=16, textColor=CONTRSTEXTCOLOR)
-        self.nome = widgets.textContainer(master=self.tabview.tab("0"), text="", fontSize=16, textColor=CONTRSTEXTCOLOR, fill=X, padx=8)
+        self.nome = widgets.textContainer(master=self.tabview.tab("2"), text="", fontSize=18, textColor=CONTRSTEXTCOLOR, padx=8)
         
         
         for c in range(0,3):
@@ -198,9 +202,9 @@ class adminFrame(CTkFrame):
             if c == 0:
                 widgets.buttonContainer(master=buttonFrame, text="", cmd=lambda : App.changeFrames(self)).configure(width=50, fg_color='transparent', border_color=WARNINGCOLOR, hover_color=WARNINGHOVERCOLOR,border_width=2, image=App.image("Exit_icon.png", 20, 20))
             elif c == 1:
-                widgets.buttonContainer(master=buttonFrame, text="").configure(width=50, fg_color='transparent', border_color=ADMTEXTCOLOR, border_width=2, image=App.image("personEdit_icon.png", 20, 20))
-            elif c == 2:
-                widgets.buttonContainer(master=buttonFrame, text="").configure(width=50, fg_color='transparent', border_color=CANCELICONCOLOR, border_width=2, image=App.image("personRemove_icon.png", 20, 20), hover_color=CANCELHOVERCOLOR)
+                widgets.buttonContainer(master=buttonFrame, text="", cmd=lambda : app.database.update(self.search.get(), self.updateOption.get(), self.updateOutput.get())).configure(width=50, fg_color='transparent', border_color=ADMTEXTCOLOR, border_width=2, image=App.image("personEdit_icon.png", 20, 20))
+            elif c == 2:                                                            
+                widgets.buttonContainer(master=buttonFrame, text="", cmd=lambda : app.database.delete(self.search.get())).configure(width=50, fg_color='transparent', border_color=CANCELICONCOLOR, border_width=2, image=App.image("personRemove_icon.png", 20, 20), hover_color=CANCELHOVERCOLOR)
             
         self.tabview.pack(fill=X)
         self.topFrame.pack(expand=True, fill=BOTH, pady=30)
@@ -279,7 +283,7 @@ class widgets:
         textLabel = CTkLabel(entryTextFrame, text="", image=App.image("Search_icon.png", 25, 25))
         imageLabel = CTkLabel(entryTextFrame, text=None)
         entry = CTkEntry(entryFrame, show=show, textvariable=output, width=300, fg_color='transparent', border_color=ADMTEXTCOLOR)
-        btn = CTkButton(submitFrame, image=App.image("Search_icon.png", 22, 22), text="", font=App.font(weight="bold"), command=lambda: widgets.admin(self, "Busque um email primeiramente!", self.warning, self.entry), 
+        btn = CTkButton(submitFrame, image=App.image("Search_icon.png", 22, 22), text="", font=App.font(weight="bold"), command=lambda: widgets.admin(self, "Busque um email!", self.warning, self.entry), 
                            fg_color="transparent", hover_color=ADMHOVERCOLOR, text_color="black",
                            border_color=ADMTEXTCOLOR, border_width=2, 
                            width=50, height=35)
@@ -465,7 +469,7 @@ class widgets:
             var.configure(text_color = CONTRSTEXTCOLOR)
             # if master.search.get() not in DATABASE:
                 #var.configure(text = "Usuário não encontrado!")
-            var.configure(text = texto)
+            var.configure(text = "Usuário não encontrado!" if master.search.get() != "" else texto)
             return master.update()
         
         if master.updateOutput.get() == "" or master.updateOption.get() == "":
@@ -485,6 +489,7 @@ Email: {person[2]}
 Senha: CRIPTOGRAFADA!
 Data de Nascimento: {person[4]}
 Gênero: {person[5]}""")
+        master.nome.configure(text=f"{person[1]}")
     
 
     def showKey(btn, entry):
@@ -574,22 +579,65 @@ class dataControl:
 
     def update(self, email, option, answer):
         try:
+            email = email.strip()
+            answer = answer.strip()
             cursor = self.connection.cursor()
             if not dataControl.read(self, email):
+                self.application.adm.warning.configure(text="Usuário não encontrado!", fg_color=CANCELICONCOLOR)
                 print("Usuário não encontrado!")
                 return False
-
-            if option == "senha":
-                key = HASHKEY
-                hashword = hmac.digest(key=key, msg=answer.encode(), digest=hashlib.sha256) 
-                answer = f"{str(hashword)[1:]}"
-                query = ("UPDATE usuarios SET {} = {} WHERE email = '{}';").format(option, answer, email)
+            
+            if option == "Nome":
+                if answer == "":
+                    self.application.adm.warning.configure(text="Preencha Corretamente!", fg_color=CANCELICONCOLOR)
+                    return False
+                
+                query = ("UPDATE usuarios SET nome = '{}' WHERE email = '{}';").format(answer, email)
                 cursor.execute(query)
+                self.application.adm.warning.configure(text="Nome Atualizado!", fg_color=CHECKICONCOLOR)
                 return True
 
-            query = ("UPDATE usuarios SET {} = '{}' WHERE email = '{}';").format(option, answer, email)
-            cursor.execute(query)
-            return True
+            if option == "Email":
+                if not re.search(r"^[a-zA-Z0-9.-_]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", answer) or answer == "":
+                    self.application.adm.warning.configure(text="Preencha Corretamente!", fg_color=CANCELICONCOLOR)
+                    return False
+                
+                query = ("UPDATE usuarios SET email = '{}' WHERE email = '{}';").format(answer, email)
+                cursor.execute(query)
+                self.application.adm.warning.configure(text="Email Atualizado!", fg_color=CHECKICONCOLOR)
+                return True
+
+            if option == "Senha":
+                if not re.search(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*?~])[A-Za-z0-9!@#$%^&*?~]{8,}$", answer) or answer == "":
+                    self.application.adm.warning.configure(text="Preencha Corretamente!", fg_color=CANCELICONCOLOR)
+                    return False
+                
+                hashword = hmac.digest(key=HASHKEY, msg=answer.encode(), digest=hashlib.sha256) 
+                answer = f"{str(hashword)[1:]}"
+                query = ("UPDATE usuarios SET senha = {} WHERE email = '{}';").format(answer, email)
+                cursor.execute(query)
+                self.application.adm.warning.configure(text="Senha Atualizada!", fg_color=CHECKICONCOLOR)
+                return True
+
+
+            if option == "Nascimento":
+                if answer == "":
+                    self.application.adm.warning.configure(text="Preencha Corretamente!", fg_color=CANCELICONCOLOR)
+                    return False
+                query = ("UPDATE usuarios SET birth = '{}' WHERE email = '{}';").format(answer, email)
+                cursor.execute(query)
+                self.application.adm.warning.configure(text="Data de Nascimento Atualizada!", fg_color=CHECKICONCOLOR)
+                return True
+                
+            if option == "Gênero":
+                if answer == "":
+                    self.application.adm.warning.configure(text="Preencha Corretamente!", fg_color=CANCELICONCOLOR)
+                    return False
+                query = ("UPDATE usuarios SET genero = '{}' WHERE email = '{}';").format(answer, email)
+                cursor.execute(query)
+                self.application.adm.warning.configure(text="Gênero Atualizado!", fg_color=CHECKICONCOLOR)
+                return True
+
         except mysql.connector.errors.Error as erro:
             print(f"Não foi possível concluir a operação: {erro}")
             return False
@@ -597,10 +645,11 @@ class dataControl:
     def delete(self, email):
         try:
             if not dataControl.read(self, email):
-                print("Usuário não encontrado!")
+                self.application.adm.warning.configure(text="Usuário não encontrado!", fg_color=CANCELICONCOLOR)
                 return False
             cursor = self.connection.cursor()
-            cursor.execute("DELETE FROM usuarios WHERE email = %s", (email,))
+            #cursor.execute("DELETE FROM usuarios WHERE email = %s", (email,))
+            self.application.adm.warning.configure(text="Usuário Deletado permanentemente!", fg_color=CHECKICONCOLOR)
             return True
         
         except mysql.connector.errors.Error as erro:
