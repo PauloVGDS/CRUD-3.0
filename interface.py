@@ -27,13 +27,14 @@ CURRENTPATH = os.path.dirname(os.path.realpath(__file__))
 
 
 class App(CTk):
-    def __init__(self, master=None):
+    def __init__(self):
         super().__init__()
         self.title("CRUD 3.0")
         self.maxsize(800, 600)
         self.minsize(800, 600)
-
-        self.database = dataControl("root", "", "localhost", "mysql_native_password", self)
+        self.user = input("Usuário: ")
+        self.password = input("Senha: ")
+        self.database = dataControl(self.user, self.password, "localhost", "mysql_native_password", self)
         self.after(100, self.database.connect)
         self.protocol("WM_DELETE_WINDOW", self.database.disconnect)
 
@@ -41,7 +42,7 @@ class App(CTk):
         self.adm = adminFrame(master=self)
         self.log = loginFrame(master=self)
         self.reg = registerFrame(master=self)
-        self.currentFrame = self.adm
+        self.currentFrame = self.log
         self.currentFrame.pack(expand=True, fill=BOTH, anchor="center")
     
 
@@ -112,7 +113,7 @@ class loginFrame(CTkFrame):
         self.warning = widgets.textContainer(master=self.buttonFrame, text="", textColor=CONTRSTEXTCOLOR, side=BOTTOM)
 
         widgets.buttonContainer(self.buttonFrame, "Registrar", side=LEFT, cmd=lambda : App.changeFrames(self), pady = 34)
-        widgets.buttonContainer(self.buttonFrame, "Entrar", side=RIGHT, cmd= lambda : widgets.login(self, "Usuário/Senha Incorretos!", self.warning, self.userInput, self.passwordInput), pady = 34)
+        widgets.buttonContainer(self.buttonFrame, "Entrar", side=RIGHT, cmd= lambda : widgets.login(self, "Usuário/Senha Incorretos!"), pady = 34)
 
 
 
@@ -150,7 +151,7 @@ class registerFrame(CTkFrame):
         self.warning = widgets.textContainer(master=self.buttonFrame, text="", textColor=CONTRSTEXTCOLOR, side=BOTTOM)
 
         widgets.personInfoContainer(self.middleFrame, birthAnswer=self.birthdate, genderAnswer=self.gender)
-        widgets.buttonContainer(self.buttonFrame, "Registrar", side=RIGHT, pady=28, cmd=lambda : widgets.registro(self, "Preencha os campos obrigatórios!", self.warning, self.nameInput, self.emailInput, self.passwordInput))
+        widgets.buttonContainer(self.buttonFrame, "Registrar", side=RIGHT, pady=28, cmd=lambda : widgets.registro(self, "Preencha os campos obrigatórios!"))
         widgets.buttonContainer(self.buttonFrame, "Voltar", side=LEFT, cmd=lambda : App.changeFrames(self), pady=28)
   
 
@@ -212,7 +213,9 @@ class adminFrame(CTkFrame):
         self.bottomFrame.pack(expand=True, fill=BOTH)
 
 
-class widgets:
+class widgets():
+    def __init__(self):
+        self.application = None 
 
     def textContainer(master, text, fontSize=20, weight="normal", textColor = CONTRSTEXTCOLOR, image=None,  **kwargs):
         firsTextFrame = CTkFrame(master, fg_color=BACKGNDCOLOR)
@@ -283,11 +286,10 @@ class widgets:
         textLabel = CTkLabel(entryTextFrame, text="", image=App.image("Search_icon.png", 25, 25))
         imageLabel = CTkLabel(entryTextFrame, text=None)
         entry = CTkEntry(entryFrame, show=show, textvariable=output, width=300, fg_color='transparent', border_color=ADMTEXTCOLOR)
-        btn = CTkButton(submitFrame, image=App.image("Search_icon.png", 22, 22), text="", font=App.font(weight="bold"), command=lambda: widgets.admin(self, "Busque um email!", self.warning, self.entry), 
+        btn = CTkButton(submitFrame, image=App.image("Search_icon.png", 22, 22), text="", font=App.font(weight="bold"), command=lambda: widgets.admin(self, "Busque um email!"), 
                            fg_color="transparent", hover_color=ADMHOVERCOLOR, text_color="black",
                            border_color=ADMTEXTCOLOR, border_width=2, 
                            width=50, height=35)
-
         submitFrame.pack(**kwargs)
         entryTextFrame.pack(fill=X, pady=5)
         entryFrame.pack(fill=BOTH, side=LEFT)
@@ -396,94 +398,76 @@ class widgets:
         entry.pack(ipady=5, pady=1, side=BOTTOM)
         return imageLabel
 
-    def login(master, texto, var, *args):
+    def login(master, texto):
         try:
+            if (master.user.get() == "admin") and (master.password.get() == "admin"):
+                return App.changeFrames(master, True)
+            app.log.userInput.configure(image=App.image("Cancel_icon.png" if master.user.get() == "" or master.password.get() == "" else "Check_icon.png", 25, 25))
+            app.log.passwordInput.configure(image=App.image("Cancel_icon.png" if master.user.get() == "" or master.password.get() == "" else "Check_icon.png", 25, 25))            
+
             user = app.database.read(master.user.get(), True)
+            if not user:
+                app.log.userInput.configure(image=App.image("Cancel_icon.png", 25, 25))
+                app.log.passwordInput.configure(image=App.image("Cancel_icon.png", 25, 25))
+                app.log.warning.configure(fg_color=CANCELICONCOLOR, text_color = CONTRSTEXTCOLOR, text = texto)
+                return False
+            
             hashword = hmac.digest(key=HASHKEY, msg=(master.password.get()).encode(), digest=hashlib.sha256)
             hashword = hmac.compare_digest(hashword, user[3])
-            if (master.user.get() == "") or (master.password.get() == "") or not (user and hashword):  
-                for el in args:
-                    el.configure(image=App.image("Cancel_icon.png", 25, 25))    
+            if hashword:
+                app.log.userInput.configure(image=App.image("Check_icon.png", 25, 25))
+                app.log.passwordInput.configure(image=App.image("Check_icon.png", 25, 25))
+                app.log.warning.configure(fg_color=CHECKICONCOLOR, text_color = CONTRSTEXTCOLOR, text = "Conectado!")
+                return True
 
-                var.configure(fg_color=CANCELICONCOLOR)
-                var.configure(text_color = CONTRSTEXTCOLOR)
-                var.configure(text = texto)
-                return master.update()
-        
-            for el in args:
-                el.configure(image=App.image("Check_icon.png", 25, 25))
-            var.configure(fg_color=CHECKICONCOLOR)
-            var.configure(text_color = CONTRSTEXTCOLOR)
-            var.configure(text = "Conectado!")
-            return master.update()
+            app.log.userInput.configure(image=App.image("Cancel_icon.png", 25, 25))
+            app.log.passwordInput.configure(image=App.image("Cancel_icon.png", 25, 25))
+            return False
+
         except TypeError:
             pass
 
-        finally:
-            if (master.user.get() == "admin") and (master.password.get() == "admin"):
-                return App.changeFrames(master, True)
         
-    def registro(master, texto, var, *args):
-            if (master.name.get() == "") or (master.email.get() == "") or (master.password.get() == ""):
-                
-                if re.search(r"^[A-Za-z]{,5}$", master.name.get()):
-                    args[0].configure(image=App.image("Cancel_icon.png", 25, 25))    
-                else:
-                    args[0].configure(image=App.image("Check_icon.png", 25, 25))  
-
-                if re.search(r"^[a-zA-Z0-9.-_]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", master.email.get()):
-                    args[1].configure(image=App.image("Check_icon.png", 25, 25))
-                else:
-                    args[1].configure(image=App.image("Cancel_icon.png", 25, 25))    
-                
-                if re.search(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*?~])[A-Za-z0-9!@#$%^&*?~]{8,}$", master.password.get()): # {mínimo, máximo}
-                    args[2].configure(image=App.image("Check_icon.png", 25, 25))  
-                else:
-                    args[2].configure(image=App.image("Cancel_icon.png", 25, 25))  
-                var.configure(fg_color=CANCELICONCOLOR)
-                var.configure(text_color = CONTRSTEXTCOLOR)
-                var.configure(text = texto)
-                return master.update()
-            
+    def registro(master, texto):
+            try:
+                nome = re.search(r"^[A-Za-zÀ-ÖØ-öø-ÿ' -]{3,48}$", master.name.get())
+                email = re.search(r"^[a-zA-Z0-9.-_]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", master.email.get())
+                senha = re.search(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*?~])[A-Za-z0-9!@#$%^&*?~]{8,}$", master.password.get())
 
 
-            for el in args:
-                el.configure(image=App.image("Check_icon.png", 25, 25))
-            var.configure(fg_color=CHECKICONCOLOR)
-            var.configure(text_color = CONTRSTEXTCOLOR)
-            var.configure(text = "Registrado!")
-            print(f"Nome: {master.name.get()}\nEmail: {master.email.get()}\nSenha: {master.password.get()}\nData de Nascimento: {master.birthdate.get()}\nGênero: {master.gender.get()}")
-            app.database.insert(master.name.get(), master.email.get(), master.password.get(), master.birthdate.get(), master.gender.get())
-            return master.update()
+                master.nameInput.configure(image=App.image("Cancel_icon.png" if not nome or master.name.get() == "" else "Check_icon.png", 25, 25))
+                master.emailInput.configure(image=App.image("Cancel_icon.png" if not email or master.email.get() == "" else "Check_icon.png", 25, 25))            
+                master.passwordInput.configure(image=App.image("Cancel_icon.png" if not senha or master.password.get() == "" else "Check_icon.png", 25, 25))
+                master.warning.configure(text = texto, text_color = CONTRSTEXTCOLOR, fg_color=CANCELICONCOLOR)
+            except Exception as erro:
+                print(f"Registro Falhou por causa: {erro}")
+                return False
+            finally:
+                if nome and email and senha:
+                    if not app.database.read(email):
+                        master.warning.configure(text = "Registrado!", text_color = CONTRSTEXTCOLOR, fg_color=CHECKICONCOLOR)
+                        app.database.insert(master.name.get(), master.email.get(), master.password.get(), master.birthdate.get(), master.gender.get())
+                        print(f"Nome: {master.name.get()}\nEmail: {master.email.get()}\nSenha: {master.password.get()}\nData de Nascimento: {master.birthdate.get()}\nGênero: {master.gender.get()}")
+                        return True
+                    master.warning.configure(text = "Email já cadastrado!", text_color = CONTRSTEXTCOLOR, fg_color=CANCELICONCOLOR)
+                return False
 
-    def admin(master, texto="", var=None, output=None, *args):
+    def admin(master, texto=""):
         # Var = Mensagem de erro
         # Args = Imagem de X nas entrys
         person = app.database.read(master.search.get())
         if not person:
-            print("Usuário não encontrado!")
-
-            for el in args:
-                el.configure(image=App.image("Cancel_icon.png", 25, 25))  
-            var.configure(fg_color=CANCELICONCOLOR)
-            var.configure(text_color = CONTRSTEXTCOLOR)
-            # if master.search.get() not in DATABASE:
-                #var.configure(text = "Usuário não encontrado!")
-            var.configure(text = "Usuário não encontrado!" if master.search.get() != "" else texto)
+            master.entry.configure(image=App.image("Cancel_icon.png", 25, 25)) 
+            master.warning.configure(text = "Usuário não encontrado!" if master.search.get() != "" else texto, fg_color=CANCELICONCOLOR, text_color = CONTRSTEXTCOLOR)
+            master.result.configure(text="Pesquise um email para ler suas informações!")
             return master.update()
         
         if master.updateOutput.get() == "" or master.updateOption.get() == "":
-            for el in args:
-                el.configure(image=App.image("Cancel_icon.png", 25, 25))  
-            var.configure(fg_color=CANCELICONCOLOR)
-            var.configure(text_color = CONTRSTEXTCOLOR)
-            var.configure(text = texto)
-            
-        for el in args:
-            el.configure(image=App.image("Check_icon.png", 25, 25))
-        var.configure(fg_color=CHECKICONCOLOR)
-        var.configure(text_color = CONTRSTEXTCOLOR)
-        var.configure(text = f"Usuário encontrado!")
+            master.entry.configure(image=App.image("Cancel_icon.png", 25, 25))  
+            master.warning.configure(text = texto, fg_color=CANCELICONCOLOR, text_color = CONTRSTEXTCOLOR)
+
+        master.entry.configure(image=App.image("Check_icon.png", 25, 25))
+        master.warning.configure(text = f"Usuário encontrado!", text_color = CONTRSTEXTCOLOR, fg_color=CHECKICONCOLOR)
         master.result.configure(text=f"""Nome: {person[1]}
 Email: {person[2]}
 Senha: CRIPTOGRAFADA!
@@ -491,7 +475,6 @@ Data de Nascimento: {person[4]}
 Gênero: {person[5]}""")
         master.nome.configure(text=f"{person[1]}")
     
-
     def showKey(btn, entry):
         entry.configure(show= "") if (entry.cget("show") == "*") else entry.configure(show= "*")
         if entry.cget("border_color") == LOGTEXTCOLOR:
@@ -509,10 +492,9 @@ class dataControl:
         self.host = host
         self.auth_plugin = auth_plugin
         self.application = application
-    
 
     def connect(self):
-        try: 
+        try:
             self.connection = mysql.connector.connect(user=self.user, 
                                                   password=self.password, 
                                                   host=self.host, 
@@ -529,9 +511,17 @@ class dataControl:
 
     def disconnect(self):
         try:
-            self.connection.disconnect()
+            if self.connection.is_connected():
+                self.connection.disconnect()
+                return True    
+        except AttributeError:
+            print("Banco de dados não iniciado!")
+            self.application.destroy()
+            return False
         except mysql.connector.errors.Error as erro:
             print(f"A desconexão falhou por causa: \n{erro}")
+            self.application.destroy()
+            return False
         finally:
             if not self.connection.is_connected():
                 print("Desconectado com sucesso!")
@@ -568,13 +558,17 @@ class dataControl:
                 cursor.execute("SELECT * FROM usuarios WHERE email = %s;", (answer,))
             else:
                 cursor.execute("SELECT * FROM usuarios WHERE nome = %s;", (answer,))
-            result = cursor.fetchone()
+            result = cursor.fetchone()        
             if result == None:
-                raise mysql.connector.errors.Error
+                print("Não foi possível encontrar o usuário!")
+                return False
             return result
-        
         except mysql.connector.errors.Error as erro:
             print(f"Não foi possível concluir a operação: {erro}")
+            return False
+        
+        except AttributeError as erro:
+            print("Conexão com base de dados falhou!")
             return False
 
     def update(self, email, option, answer):
@@ -584,7 +578,10 @@ class dataControl:
             cursor = self.connection.cursor()
             if not dataControl.read(self, email):
                 self.application.adm.warning.configure(text="Usuário não encontrado!", fg_color=CANCELICONCOLOR)
-                print("Usuário não encontrado!")
+                return False
+
+            if option == None:
+                self.application.adm.warning.configure(text="Preencha Corretamente!", fg_color=CANCELICONCOLOR)
                 return False
             
             if option == "Nome":
@@ -648,7 +645,7 @@ class dataControl:
                 self.application.adm.warning.configure(text="Usuário não encontrado!", fg_color=CANCELICONCOLOR)
                 return False
             cursor = self.connection.cursor()
-            #cursor.execute("DELETE FROM usuarios WHERE email = %s", (email,))
+            cursor.execute("DELETE FROM usuarios WHERE email = %s", (email,))
             self.application.adm.warning.configure(text="Usuário Deletado permanentemente!", fg_color=CHECKICONCOLOR)
             return True
         
@@ -667,16 +664,11 @@ class dataControl:
         except mysql.connector.errors.Error as erro:
             print(f"Não foi possível inserir os dados por causa: \t{erro}")
             return False
+        
+        except AttributeError as erro:  
+            print("Conexão com base de dados falhou!")
+            return False
 
-
-
-#db = dataControl("host", "password", "localhost", "mysql_native_password")
-#db.connect()
-#db.insert("Paulo Vinicius", "teste2@gmail.com", "Paulo123", "12-08-2004", "Masculino")
-#db.update("teste2@gmail.com", "senha", "PauloVGDS")
-#db.delete("teste2@gmail.com")
-#db.disconnect()
-
-app = App()
-app.mainloop()
-
+if __name__ == "__main__":
+    app = App()
+    app.mainloop()
