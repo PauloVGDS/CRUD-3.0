@@ -83,3 +83,8 @@ Responsável por prover a função Hash em si.
 Responsável por implementar RegEx
 - `os`(built-in)
 Responsável por fornecer acesso ao caminho dos arquivos no ambiente virtual
+
+# Desing da Interface
+![Janela de Login](login.png)
+![Janela de Registro](registro.png)
+![Janela de Administração](admin.png)
